@@ -17,6 +17,13 @@ public final class InventoryInfo {
         }
     }
 
+    public record Outbound(String productCode, String productName, long quantity, Instant updatedAt) {
+
+        public static Outbound of(Product product, InventoryState state) {
+            return new Outbound(product.getProductCode(), product.getName(), state.quantity(), state.updatedAt());
+        }
+    }
+
     public record CurrentStock(String productCode, String productName, long quantity, Instant updatedAt) {
 
         public static CurrentStock of(Product product, Inventory inventory) {

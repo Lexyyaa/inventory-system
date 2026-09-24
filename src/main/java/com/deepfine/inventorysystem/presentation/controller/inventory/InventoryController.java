@@ -36,6 +36,15 @@ public class InventoryController implements InventoryApiDocs {
     }
 
     @Override
+    @PostMapping("/outbound")
+    public InventoryResponse.Outbound outbound(
+            @RequestAttribute(TENANT_ID) Long tenantId, @RequestBody @Valid InventoryRequest.Outbound request) {
+        InventoryCommand.Outbound command = request.toCommand(tenantId);
+        InventoryInfo.Outbound result = inventoryApplicationService.outbound(command);
+        return InventoryResponse.Outbound.from(result);
+    }
+
+    @Override
     @GetMapping("/{productCode}")
     public InventoryResponse.CurrentStock getCurrentStock(
             @RequestAttribute(TENANT_ID) Long tenantId, @PathVariable String productCode) {

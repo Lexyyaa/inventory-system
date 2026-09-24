@@ -1,0 +1,141 @@
+# 출고 API 실측 (F4)
+# 실행: 서버를 띄운 뒤 python3 scripts/run_http.py http/outbound.http
+# 순서 의존: 위에서 아래로. 준비 입고로 OUT-A001(100) · OUT-C001(10)을 만든 뒤 출고한다
+# 매번 빈 DB에서 시작한다 (docker compose down -v && docker compose up -d)
+
+@host = http://localhost:8080
+
+### [준비] tenant-001 OUT-A001 입고
+# @expect 200
+# @expect $.quantity == 100
+POST {{host}}/api/v1/inventory/inbound
+X-Tenant-Id: tenant-001
+Content-Type: application/json
+
+{ "productCode": "OUT-A001", "productName": "Apple", "quantity": 100 }
+
+### [준비] tenant-001 OUT-C001 입고
+# @expect 200
+# @expect $.quantity == 10
+POST {{host}}/api/v1/inventory/inbound
+X-Tenant-Id: tenant-001
+Content-Type: application/json
+
+{ "productCode": "OUT-C001", "productName": "Cherry", "quantity": 10 }
+
+### [TC-4-01] 정상 출고
+# @expect 200
+# @expect $.productCode == "OUT-A001"
+# @expect $.productName == "Apple"
+# @expect $.quantity == 70
+# @db SELECT i.quantity FROM inventory i JOIN product p ON p.id = i.product_id JOIN tenant t ON t.id = p.tenant_id WHERE t.code = 'tenant-001' AND p.product_code = 'OUT-A001' => 70
+POST {{host}}/api/v1/inventory/outbound
+X-Tenant-Id: tenant-001
+Content-Type: application/json
+
+{ "productCode": "OUT-A001", "quantity": 30 }
+
+### [TC-4-02] 등록되지 않은 상품 출고
+# @expect 404
+# @expect $.code == "PRODUCT_NOT_FOUND"
+# @db SELECT COUNT(*) FROM product WHERE product_code = 'OUT-B001' => 0
+POST {{host}}/api/v1/inventory/outbound
+X-Tenant-Id: tenant-001
+Content-Type: application/json
+
+{ "productCode": "OUT-B001", "quantity": 5 }
+
+### [TC-4-03] 재고 부족
+# @expect 409
+# @expect $.code == "INSUFFICIENT_STOCK"
+# @db SELECT i.quantity FROM inventory i JOIN product p ON p.id = i.product_id JOIN tenant t ON t.id = p.tenant_id WHERE t.code = 'tenant-001' AND p.product_code = 'OUT-A001' => 70
+POST {{host}}/api/v1/inventory/outbound
+X-Tenant-Id: tenant-001
+Content-Type: application/json
+
+{ "productCode": "OUT-A001", "quantity": 71 }
+
+### [TC-4-04] 수량 0
+# @expect 400
+# @expect $.code == "INVALID_QUANTITY"
+# @expect $.message == "출고 수량이 허용 범위를 벗어났습니다."
+# @db SELECT i.quantity FROM inventory i JOIN product p ON p.id = i.product_id JOIN tenant t ON t.id = p.tenant_id WHERE t.code = 'tenant-001' AND p.product_code = 'OUT-A001' => 70
+POST {{host}}/api/v1/inventory/outbound
+X-Tenant-Id: tenant-001
+Content-Type: application/json
+
+{ "productCode": "OUT-A001", "quantity": 0 }
+
+### [TC-4-04] 수량 -1
+# @expect 400
+# @expect $.code == "INVALID_QUANTITY"
+# @expect $.message == "출고 수량이 허용 범위를 벗어났습니다."
+# @db SELECT i.quantity FROM inventory i JOIN product p ON p.id = i.product_id JOIN tenant t ON t.id = p.tenant_id WHERE t.code = 'tenant-001' AND p.product_code = 'OUT-A001' => 70
+POST {{host}}/api/v1/inventory/outbound
+X-Tenant-Id: tenant-001
+Content-Type: application/json
+
+{ "productCode": "OUT-A001", "quantity": -1 }
+
+### [04 §4] 수량 상한 초과
+# @expect 400
+# @expect $.code == "INVALID_QUANTITY"
+# @expect $.message == "출고 수량이 허용 범위를 벗어났습니다."
+# @db SELECT i.quantity FROM inventory i JOIN product p ON p.id = i.product_id JOIN tenant t ON t.id = p.tenant_id WHERE t.code = 'tenant-001' AND p.product_code = 'OUT-A001' => 70
+POST {{host}}/api/v1/inventory/outbound
+X-Tenant-Id: tenant-001
+Content-Type: application/json
+
+{ "productCode": "OUT-A001", "quantity": 1000000001 }
+
+### [TC-4-05] 재고 전량 출고
+# @expect 200
+# @expect $.productCode == "OUT-C001"
+# @expect $.quantity == 0
+# @db SELECT i.quantity FROM inventory i JOIN product p ON p.id = i.product_id JOIN tenant t ON t.id = p.tenant_id WHERE t.code = 'tenant-001' AND p.product_code = 'OUT-C001' => 0
+POST {{host}}/api/v1/inventory/outbound
+X-Tenant-Id: tenant-001
+Content-Type: application/json
+
+{ "productCode": "OUT-C001", "quantity": 10 }
+
+### [TC-4-06] 다른 업체 상품 출고
+# @expect 404
+# @expect $.code == "PRODUCT_NOT_FOUND"
+# @db SELECT COUNT(*) FROM product p JOIN tenant t ON t.id = p.tenant_id WHERE t.code = 'tenant-002' AND p.product_code = 'OUT-A001' => 0
+# @db SELECT i.quantity FROM inventory i JOIN product p ON p.id = i.product_id JOIN tenant t ON t.id = p.tenant_id WHERE t.code = 'tenant-001' AND p.product_code = 'OUT-A001' => 70
+POST {{host}}/api/v1/inventory/outbound
+X-Tenant-Id: tenant-002
+Content-Type: application/json
+
+{ "productCode": "OUT-A001", "quantity": 5 }
+
+### [04 §4] 필수값 누락 (productCode)
+# @expect 400
+# @expect $.code == "INVALID_REQUEST"
+# @expect $.message == "필수 요청 정보가 누락되었습니다."
+POST {{host}}/api/v1/inventory/outbound
+X-Tenant-Id: tenant-001
+Content-Type: application/json
+
+{ "quantity": 5 }
+
+### [04 §4] 정수가 아닌 수량
+# @expect 400
+# @expect $.code == "INVALID_REQUEST"
+# @expect $.message == "요청 형식이 올바르지 않습니다."
+# @db SELECT i.quantity FROM inventory i JOIN product p ON p.id = i.product_id JOIN tenant t ON t.id = p.tenant_id WHERE t.code = 'tenant-001' AND p.product_code = 'OUT-A001' => 70
+POST {{host}}/api/v1/inventory/outbound
+X-Tenant-Id: tenant-001
+Content-Type: application/json
+
+{ "productCode": "OUT-A001", "quantity": 1.5 }
+
+### [TC-1-01] 업체 헤더 없이 출고
+# @expect 400
+# @expect $.code == "INVALID_TENANT"
+# @db SELECT i.quantity FROM inventory i JOIN product p ON p.id = i.product_id JOIN tenant t ON t.id = p.tenant_id WHERE t.code = 'tenant-001' AND p.product_code = 'OUT-A001' => 70
+POST {{host}}/api/v1/inventory/outbound
+Content-Type: application/json
+
+{ "productCode": "OUT-A001", "quantity": 5 }

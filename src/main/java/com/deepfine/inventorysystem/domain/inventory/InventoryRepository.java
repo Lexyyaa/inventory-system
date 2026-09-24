@@ -6,5 +6,7 @@ public interface InventoryRepository {
 
     InventoryState increase(Long productId, long quantity);
 
+    InventoryState decrease(Long productId, long quantity);
+
     Optional<Inventory> findByProductId(Long productId);
 }
