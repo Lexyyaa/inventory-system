@@ -10,12 +10,13 @@ Java / Spring Boot / PostgreSQL 기반의 재고관리시스템 MVP입니다.
 
 1. [주요 기능과 기술 스택](#주요-기능과-기술-스택)
 2. [핵심 설계](#핵심-설계)
-3. [DDL](#ddl)
-4. [작업 방법](#작업-방법)
-5. [명세 문서](#명세-문서)
-6. [작업 규칙과 작업 로그](#작업-규칙과-작업-로그)
-7. [실행 방법](#실행-방법)
-8. [한계와 확장 방향](#한계와-확장-방향)
+3. [프로젝트 구조](#프로젝트-구조)
+4. [DDL](#ddl)
+5. [작업 방법](#작업-방법)
+6. [명세 문서](#명세-문서)
+7. [작업 규칙과 작업 로그](#작업-규칙과-작업-로그)
+8. [실행 방법](#실행-방법)
+9. [한계와 확장 방향](#한계와-확장-방향)
 
 ---
 
@@ -65,6 +66,78 @@ Java / Spring Boot / PostgreSQL 기반의 재고관리시스템 MVP입니다.
   - 입출고 응답의 `quantity`는 이 요청이 반영된 직후의 재고입니다
 
 결정 이유는 [01 분석](docs/design/01-analysis.md), 구현 방식은 [03 도메인 모델](docs/design/03-domain-model.md)에 있습니다.
+
+---
+
+## 프로젝트 구조
+
+### 계층
+
+```text
+presentation → application → domain ← infrastructure
+```
+
+- presentation: 요청과 응답, 업체 확인
+- application: 트랜잭션 경계, 도메인 서비스 조합
+- domain: 업무 규칙 (엔티티, 도메인 서비스, repository 인터페이스)
+- infrastructure: DB 접근 (repository 구현, 원자 SQL)
+- support: 설정, 공통 오류 응답, 설정값 (어느 계층에서나 사용)
+
+- 의존은 화살표 방향으로만 흐릅니다. domain은 다른 계층을 모릅니다
+- infrastructure는 domain의 repository 인터페이스를 구현합니다
+- 이 규칙은 ArchUnit 테스트(`ArchitectureTest`)가 빌드마다 검사합니다
+
+### 요청 하나의 흐름 (입고)
+
+```text
+TenantInterceptor          X-Tenant-Id로 업체 확인 (본문 해석 전)
+  ↓
+InventoryController        요청 검증 → Command로 변환
+  ↓
+InventoryApplicationService  @Transactional, 수량 검사 → 도메인 서비스 호출
+  ↓
+ProductService / InventoryService   상품 확보, 재고 증가
+  ↓
+ProductRepository / InventoryRepository (인터페이스)
+  ↓
+*RepositoryImpl → *JpaRepository   원자 SQL 실행
+```
+
+### 디렉토리
+
+```text
+src/main/java/com/deepfine/inventorysystem
+├── presentation
+│   ├── controller/inventory   컨트롤러, Request/Response DTO, Swagger 문서(ApiDocs)
+│   └── interceptor            업체 확인 인터셉터
+├── application
+│   ├── inventory              입고/출고/조회 유즈케이스, Command/Info DTO
+│   └── tenant                 업체 확인 유즈케이스
+├── domain
+│   ├── product                상품 엔티티, 상품 도메인 서비스, repository 인터페이스
+│   ├── inventory              재고 엔티티(수량 검사), 재고 도메인 서비스, repository 인터페이스
+│   ├── tenant                 업체 엔티티, 업체 도메인 서비스, repository 인터페이스
+│   ├── common                 생성/변경 시각 매핑(BaseTimeEntity)
+│   └── exception              에러 코드, 비즈니스 예외
+├── infrastructure
+│   └── persistence            repository 구현, Spring Data JPA 리포지토리, 원자 SQL
+└── support
+    ├── config                 웹 설정(/api/v1 접두사, 인터셉터 등록), Swagger 설정
+    ├── exception              전역 예외 처리, 오류 응답 형식
+    └── properties             설정값(수량 상한)
+
+src/main/resources
+├── application.yml            설정 (기본 프로파일 local)
+├── schema.sql                 DDL
+└── data.sql                   업체 seed
+
+src/test/java/com/deepfine/inventorysystem
+├── architecture               계층 규칙 (ArchUnit)
+├── domain                     도메인 단위 테스트
+├── infrastructure             DB 제약 테스트
+├── presentation               API 통합 테스트, 동시성 테스트
+└── support                    테스트 도구 (Testcontainers 설정, 동시 실행 도구, 테스트 데이터), 오류 응답 매핑 테스트
+```
 
 ---
 
