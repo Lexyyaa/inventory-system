@@ -124,6 +124,27 @@ class CurrentStockApiTest {
         assertThat(db.inventoryQuantities("tenant-001", "A001")).containsExactly(10L);
     }
 
+    @Test
+    @DisplayName(
+            "[TC-3-04] tenant-002가 tenant-001에만 있는 A001을 조회하면 404 PRODUCT_NOT_FOUND를 반환하고 tenant-001의 재고는 노출하지 않는다")
+    void rejectsProductOnlyInOtherTenant() throws Exception {
+        // given
+        db.insertProduct("tenant-001", "A001", "Apple", 10);
+        OffsetDateTime updatedAtBefore = db.inventoryUpdatedAt("tenant-001", "A001");
+        assertThat(db.productCount("tenant-002")).isZero();
+
+        // when
+        ResultActions result = currentStock("tenant-002", "A001");
+
+        // then
+        expectProductNotFound(result);
+        assertThat(db.productCount("tenant-002")).isZero();
+        assertThat(db.productCount("tenant-001")).isEqualTo(1);
+        assertThat(db.productNames("tenant-001", "A001")).containsExactly("Apple");
+        assertThat(db.inventoryQuantities("tenant-001", "A001")).containsExactly(10L);
+        assertThat(db.inventoryUpdatedAt("tenant-001", "A001")).isAtSameInstantAs(updatedAtBefore);
+    }
+
     private ResultActions currentStock(String tenantCode, String productCode) throws Exception {
         return mockMvc.perform(get(CURRENT_STOCK_URL, productCode).header(TENANT_HEADER, tenantCode));
     }
