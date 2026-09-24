@@ -8,7 +8,7 @@
 > - TC: [05](design/05-test-cases.md)
 >
 
-**현재:** F3 / T3-1
+**현재:** F3 / T3-2
 
 ## 규칙
 
@@ -90,7 +90,7 @@
 
 > 리뷰: reviewer만 (verifier 생략)
 
-- [ ] T3-1 `feat: 현재 재고 조회 API 구현` — GET /api/v1/inventory/{productCode} · ApiDocs
+- [x] T3-1 `feat: 현재 재고 조회 API 구현` — GET /api/v1/inventory/{productCode} · ApiDocs
 - [ ] T3-2 `test: 재고 조회 성공·실패 케이스` — TC-3-01 ~ TC-3-03
 - [ ] T3-3 `test: 재고 조회 엣지 케이스` — TC-3-04
 - [ ] T3-4 `test: F3 .http 실행 케이스`

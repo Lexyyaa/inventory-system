@@ -7,4 +7,6 @@ import lombok.NoArgsConstructor;
 public final class InventoryCommand {
 
     public record Inbound(Long tenantId, String productCode, String productName, long quantity) {}
+
+    public record CurrentStock(Long tenantId, String productCode) {}
 }

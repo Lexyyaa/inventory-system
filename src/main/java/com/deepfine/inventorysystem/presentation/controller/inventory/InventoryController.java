@@ -7,6 +7,8 @@ import com.deepfine.inventorysystem.application.inventory.InventoryCommand;
 import com.deepfine.inventorysystem.application.inventory.InventoryInfo;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -31,5 +33,14 @@ public class InventoryController implements InventoryApiDocs {
         InventoryCommand.Inbound command = request.toCommand(tenantId);
         InventoryInfo.Inbound result = inventoryApplicationService.inbound(command);
         return InventoryResponse.Inbound.from(result);
+    }
+
+    @Override
+    @GetMapping("/{productCode}")
+    public InventoryResponse.CurrentStock getCurrentStock(
+            @RequestAttribute(TENANT_ID) Long tenantId, @PathVariable String productCode) {
+        InventoryCommand.CurrentStock command = new InventoryCommand.CurrentStock(tenantId, productCode);
+        InventoryInfo.CurrentStock result = inventoryApplicationService.getCurrentStock(command);
+        return InventoryResponse.CurrentStock.from(result);
     }
 }

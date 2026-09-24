@@ -1,5 +1,7 @@
 package com.deepfine.inventorysystem.domain.inventory;
 
+import java.util.Optional;
+
 public interface InventoryRepository {
 
     /**
@@ -8,4 +10,6 @@ public interface InventoryRepository {
      * - 이 요청이 반영된 직후의 수량과 변경 시각을 돌려준다 <br>
      */
     InventoryState increase(Long productId, long quantity);
+
+    Optional<Inventory> findByProductId(Long productId);
 }

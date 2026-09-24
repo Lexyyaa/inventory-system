@@ -1,5 +1,6 @@
 package com.deepfine.inventorysystem.application.inventory;
 
+import com.deepfine.inventorysystem.domain.inventory.Inventory;
 import com.deepfine.inventorysystem.domain.inventory.InventoryService;
 import com.deepfine.inventorysystem.domain.inventory.InventoryState;
 import com.deepfine.inventorysystem.domain.product.Product;
@@ -26,5 +27,12 @@ public class InventoryApplicationService {
         Product product = productService.getOrCreate(command.tenantId(), command.productCode(), command.productName());
         InventoryState changed = inventoryService.increase(product.getId(), command.quantity());
         return InventoryInfo.Inbound.of(product, changed);
+    }
+
+    @Transactional(readOnly = true)
+    public InventoryInfo.CurrentStock getCurrentStock(InventoryCommand.CurrentStock command) {
+        Product product = productService.get(command.tenantId(), command.productCode());
+        Inventory inventory = inventoryService.get(product.getId());
+        return InventoryInfo.CurrentStock.of(product, inventory);
     }
 }

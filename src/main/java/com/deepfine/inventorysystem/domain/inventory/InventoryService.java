@@ -24,4 +24,10 @@ public class InventoryService {
     public InventoryState increase(Long productId, long quantity) {
         return inventoryRepository.increase(productId, quantity);
     }
+
+    public Inventory get(Long productId) {
+        return inventoryRepository
+                .findByProductId(productId)
+                .orElseThrow(() -> new IllegalStateException("상품은 있는데 재고가 없습니다."));
+    }
 }
