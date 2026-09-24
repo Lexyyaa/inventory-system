@@ -32,6 +32,7 @@
 | F0 설계 문서 · 점검 | +1:30 (17:00) | 16:49 |
 | F1 기초 설정 | +2:30 (18:00) | 17:13 |
 | F2 입고 | +4:30 (20:00) | 18:16 |
+| F2 코드 리뷰 · 반영 | | 20:10 |
 | F3 조회 | +5:15 (20:45) | |
 | F4 출고 | +7:00 (22:30) | |
 | F5 마무리 | +9:00 (00:30) | |
@@ -73,6 +74,17 @@
 - [x] T2-7 `test: F2 .http 실행 케이스`
 - [x] T2-8 `docs: F2 작업 로그`
 
+> 코드 리뷰 반영 (사용자 리뷰 합의 14건)
+
+- [x] T2-9 `refactor: 웹 계층 패키지와 API 경로 접두사 정리` — interceptor · support/config/WebConfig · @RequestAttribute · API_PREFIX · ArchUnit support 제외
+- [x] T2-10 `refactor: 입고를 도메인 서비스로 분리` — ProductService · InventoryService · 컨트롤러 세 줄 · toCommand · requireNonNull 삭제
+- [x] T2-11 `refactor: 재고 변경 결과를 InventoryState로 받기` — InventorySnapshot · ChangedRow 통합, Instant
+- [x] T2-12 `feat: 모든 테이블에 생성·변경 시각 추가` — schema.sql 컬럼 3개 · 매핑 전용 BaseTimeEntity
+- [x] T2-13 `chore: 쓰지 않는 TransactionRunner 삭제`
+- [x] T2-14 `style: 주석 정리` — OpenApiConfig 제목 · 버전만
+- [x] T2-15 `docs: 코드 리뷰 합의 규칙 반영` — CLAUDE.md 3개 · 체크리스트 · 03 시각 컬럼
+- [ ] T2-16 `docs: F2 코드 리뷰 작업 로그`
+
 ## F3. 조회 `feature/query` — TC-3-01 ~ TC-3-04
 
 > 리뷰: reviewer만 (verifier 생략)
@@ -112,10 +124,9 @@
 
 | F | 출처 | 심각도 | 쪽 | 내용 | 처리 |
 |---|---|---|---|---|---|
-| F1 | reviewer | 낮음 | 코드 | `TransactionRunner` 주석의 "용도" 단락이 REPEATABLE READ 락 조회 용도를 설명한다 (이 과제는 쓰지 않음, "용도:트랜잭션" 띄어쓰기) | |
 | F1 | reviewer | 확인 | 코드 | `X-Tenant-Id`에 제어 문자(NUL)가 오면 응답 형식이 `{code, message}`인지, 500이 나는지 미확인 — `.http` 실측 때 curl로 확인 | F2 실측: Tomcat이 Spring 전에 HTML 400으로 막음 (500 아님) → README 한계 후보 |
 | F2 | reviewer | 낮음 | 문서 | 03 §9는 "RETURNING이 비면 재조회"인데 구현은 항상 재조회 (결과 같음, 신규 상품일 때 SELECT 1회 추가) | F2 리뷰 반영에서 03 §9 문구를 구현에 맞춤 |
-| F2 | reviewer | 낮음 | 문서 | native `timestamptz`가 Hibernate 6.6에서 `Instant`로 와서 RETURNING을 인프라 projection으로 받음 — src/main/CLAUDE.md RETURNING 규칙 문구와 다름 | F2 리뷰 반영에서 규칙 문구 개정 |
+| F2 | reviewer | 낮음 | 문서 | native `timestamptz`가 Hibernate 6.6에서 `Instant`로 와서 RETURNING을 인프라 projection으로 받음 — src/main/CLAUDE.md RETURNING 규칙 문구와 다름 | 고침 (9427b3a): `InventoryState(Instant)`로 바로 받음 |
 | F2 | reviewer | 낮음 | 테스트 | 05에 없는 테스트 3건(수량 양 끝값, NUL · 짝 없는 서로게이트, 이모지 255/256자)이 코드에만 있음 — 05 추가 제안 | |
 | F2 | verifier | 중간 | 테스트 | 상품코드 허용 문자(`A 001` 등) 위반 TC 없음 — `@Pattern`을 지워도 F2 테스트가 통과 | |
 | F2 | verifier | 중간 | 테스트 | 04 §2 순서 조합 "필수값 → 수량", "수량 → 상품 상태" TC 없음 | |
@@ -143,3 +154,7 @@
 - README에 쓸 것 (T5-3)
   - 구현 범위: 02 §1을 요약해 소개
   - 확장 방향: 창고/로케이션별 재고, 예약 재고, 재고 이동 이력, 멱등성 (03에서 뺀 내용)
+  - 한계
+    - DB 이식성: 원자 SQL이 PostgreSQL 문법(`ON CONFLICT`, `RETURNING`)이라 DB를 바꾸면 세 쿼리를 다시 써야 함
+    - `X-Tenant-Id`에 제어 문자(NUL)가 오면 Tomcat이 Spring 전에 HTML 400으로 막음 (`{code, message}` 형식 아님)
+    - 재고 합이 BIGINT 범위를 넘으면 500 (한 건 상한 10억이라 약 92억 번 입고해야 생김)

@@ -12,6 +12,9 @@
   - application·presentation: 서비스·컨트롤러 기준
     - `InboundConcurrencyTest`, `InboundApiTest`
 - 본문은 `// given` `// when` `// then` 주석으로 나누고, 05의 given · when · then을 그대로 따른다
+- 주석은 `@DisplayName`과 `// given` `// when` `// then`만 둔다
+- 테스트 도구는 `support/` 바로 아래에 둔다
+  - `support/` 하위 패키지(`support/exception` 등)에는 main `support` 코드의 테스트만 둔다
 
 ## 종류
 
@@ -24,7 +27,8 @@
 | 통합 (저장소) | `@IntegrationTest` + `JdbcTemplate`으로 직접 저장 | `infrastructure/**` |
 | 구조 | ArchUnit | `architecture/ArchitectureTest` |
 
-- TC-1-01·02의 테스트 전용 엔드포인트 `GET /api/v1/test/tenant`는 `src/test/java/…/presentation/tenant` 아래 **최상위** `@RestController` 클래스로 둔다
+- TC-1-01·02의 테스트 전용 엔드포인트 `GET /api/v1/test/tenant`는 `src/test/java/…/presentation/interceptor` 아래 **최상위** `@RestController` 클래스로 둔다
+  - 매핑은 `/test/tenant`만 적는다. `/api/v1`은 `WebConfig`가 presentation 패키지 컨트롤러에 붙인다
   - `src/main`에 두지 않는다
   - 테스트 클래스 안에 중첩하지 않는다 — 중첩하면 스캔에서 빠져 등록되지 않고, 인터셉터만 동작해 테스트가 거짓으로 통과한다
 
