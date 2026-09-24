@@ -75,6 +75,8 @@ com.deepfine.inventorysystem
     - 없으면 예외
   - 없는 게 정상인 경우만 `findByXxx()`
     - `Optional`을 돌려준다
+  - 예외: 있어야 하는데 없으면 서버 결함(500)인 경우도 `findByXxx()`
+    - 도메인 서비스가 `orElseThrow(IllegalStateException)`로 푼다 (예: 생성을 시도한 상품의 재조회)
 - 구현: `infrastructure/persistence/{domain}/{Aggregate}RepositoryImpl`
   - `@Repository`
   - `Optional`을 풀고 not-found 예외를 던지는 곳은 여기다

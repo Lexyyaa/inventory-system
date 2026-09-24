@@ -32,7 +32,7 @@ tools: Read, Grep, Glob, Bash
 특히 이것부터 본다.
 
 - 비즈니스 규칙·상태 검증이 ApplicationService나 DTO에 있지 않은가
-- DTO에 `from`/`of` 외의 계산·검증·분기가 있지 않은가
+- DTO에 `from`/`of`/`toXxx` 외의 계산·검증·분기가 있지 않은가
 - 컨트롤러 핸들러에 조건문이 있지 않은가
 - 사용자 입력 오류가 500으로 샐 경로가 있는가 (VO 생성자 예외, NPE 등)
 - `catch`가 `BusinessException`을 삼키지 않는가

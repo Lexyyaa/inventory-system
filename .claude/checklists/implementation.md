@@ -56,7 +56,7 @@
 ## 페이지 · 조회
 
 - [ ] 조회 서비스는 `@Transactional(readOnly = true)`다 — 불필요한 flush · 쓰기 락
-- [ ] 없으면 예외인 조회는 `getByXxx`, 없는 게 정상이면 `findByXxx`다 — not-found가 null로 새서 500
+- [ ] 없으면 예외인 조회는 `getByXxx`, 없는 게 정상이면 `findByXxx`다. 있어야 하는데 없으면 서버 결함인 곳은 `findByXxx` + 도메인 서비스의 `IllegalStateException`(500) — not-found가 null로 새서 500, 또는 서버 결함이 404로 숨는다
 
 ## 테스트
 
