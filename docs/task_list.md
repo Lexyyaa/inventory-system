@@ -8,7 +8,7 @@
 > - TC: [05](design/05-test-cases.md)
 >
 
-**현재:** F3 / T3-4
+**현재:** F3 / T3-5
 
 ## 규칙
 
@@ -95,7 +95,7 @@
 - [x] T3-1 `feat: 현재 재고 조회 API 구현` — GET /api/v1/inventory/{productCode} · ApiDocs
 - [x] T3-2 `test: 재고 조회 성공·실패 케이스` — TC-3-01 ~ TC-3-03
 - [x] T3-3 `test: 재고 조회 엣지 케이스` — TC-3-04
-- [ ] T3-4 `test: F3 .http 실행 케이스`
+- [x] T3-4 `test: F3 .http 실행 케이스`
 - [ ] T3-5 `docs: F3 작업 로그`
 
 ## F4. 출고 `feature/outbound` — TC-4-01 ~ TC-4-09
