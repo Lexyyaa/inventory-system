@@ -37,7 +37,7 @@
   - 단 `X-Tenant-Id`는 길이 · 형식과 상관없이 `INVALID_TENANT`, 경로의 상품코드는 검증하지 않고 없으면 404 `PRODUCT_NOT_FOUND` (04 §2 · §5)
 - 정책 수치(수량 상한 등)는 `application.yml` + `@ConfigurationProperties`에 둔다
 - 요청 본문에 정의되지 않은 필드는 무시한다
-- 엔티티는 `BaseTimeEntity`를 상속하지 않고, 서로 식별자(Long)로 참조한다
+- 엔티티는 매핑 전용 `BaseTimeEntity`를 상속하고(시각은 DB가 채운다), 서로 식별자(Long)로 참조한다
 
 ## 하지 말 것
 
@@ -54,9 +54,10 @@
 
 ## 규칙 — 사람이 본다
 
-- 비즈니스 규칙 · 불변식은 도메인 객체에. Service는 조율만
-- DTO에는 변환 메서드(`from`/`of`)만
-- 재고 변경과 상품 생성은 03의 원자 SQL로만
+- 비즈니스 규칙 · 불변식은 도메인 객체와 도메인 서비스에. ApplicationService는 조합과 트랜잭션만
+- DTO에는 변환 메서드(`from`/`of`/`to`)만
+- 재고 변경과 상품 생성은 03의 원자 SQL로만. 직접 쓰는 SQL은 이 동시성 장치에만
+- 주석은 기본 없음. 형식은 `src/main/CLAUDE.md` "주석"
 - 입력 오류는 4xx. 500은 서버 결함일 때만
 - 세부 규칙: 코드는 `src/main/CLAUDE.md`, 테스트는 `src/test/CLAUDE.md`
 

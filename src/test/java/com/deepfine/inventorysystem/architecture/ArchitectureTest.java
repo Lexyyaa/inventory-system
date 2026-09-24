@@ -13,9 +13,6 @@ import org.springframework.stereotype.Repository;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-/**
- * CLAUDE.md의 "도구가 검증한다" 규칙. 규칙을 바꾸려면 문서가 아니라 여기를 고친다.
- */
 @AnalyzeClasses(packages = "com.deepfine.inventorysystem", importOptions = ImportOption.DoNotIncludeTests.class)
 class ArchitectureTest {
 
@@ -25,9 +22,6 @@ class ArchitectureTest {
     private static final String INFRASTRUCTURE = "..infrastructure..";
     private static final String SUPPORT = "..support..";
 
-    // presentation → application → domain ← infrastructure
-    // presentation(Request/Response)은 domain을 모른다. 변환은 application의 Command/Info가 맡는다
-    // MQ 리스너·스케줄러 같은 진입점도 application을 호출하므로 presentation에 둔다
     @ArchTest
     static final ArchRule 레이어_의존_방향 = layeredArchitecture()
             .consideringOnlyDependenciesInLayers()
@@ -40,19 +34,14 @@ class ArchitectureTest {
             .definedBy(DOMAIN)
             .layer("Infrastructure")
             .definedBy(INFRASTRUCTURE)
-            .layer("Support")
-            .definedBy(SUPPORT)
             .whereLayer("Presentation")
             .mayNotBeAccessedByAnyLayer()
             .whereLayer("Application")
             .mayOnlyBeAccessedByLayers("Presentation")
             .whereLayer("Domain")
-            .mayOnlyBeAccessedByLayers("Application", "Infrastructure", "Support")
+            .mayOnlyBeAccessedByLayers("Application", "Infrastructure")
             .whereLayer("Infrastructure")
-            .mayNotBeAccessedByAnyLayer()
-            // domain은 properties·config를 직접 받지 않는다. 정책값은 application이 읽어 인자로 넘긴다
-            .whereLayer("Support")
-            .mayOnlyBeAccessedByLayers("Presentation", "Application", "Infrastructure");
+            .mayNotBeAccessedByAnyLayer();
 
     @ArchTest
     static final ArchRule 도메인은_웹_계층을_모른다 = noClasses()

@@ -1,4 +1,4 @@
--- 업체 seed (docs/design/03-domain-model.md §2 "식별과 준비")
+-- 업체 seed
 -- 기동마다 실행된다. ON CONFLICT DO NOTHING이라 재기동해도 중복되지 않는다
 
 INSERT INTO tenant (code, name)

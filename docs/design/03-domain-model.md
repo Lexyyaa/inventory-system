@@ -55,6 +55,7 @@ Tenant B / A001
 | code       | VARCHAR(100) | UNIQUE, NOT NULL | Tenant 식별 코드 |
 | name       | VARCHAR(255) | NOT NULL         | 업체명          |
 | created_at | TIMESTAMPTZ  | NOT NULL, DEFAULT now() | 생성 시각        |
+| updated_at | TIMESTAMPTZ  | NOT NULL, DEFAULT now() | 마지막 변경 시각   |
 
 ---
 
@@ -94,6 +95,7 @@ Product는 상품의 식별 정보와 기본 정보를 관리한다.
 | product_code | VARCHAR(100) | NOT NULL | Tenant 내 상품코드 |
 | name         | VARCHAR(255) | NOT NULL     | 상품명           |
 | created_at   | TIMESTAMPTZ  | NOT NULL, DEFAULT now() | 생성 시각         |
+| updated_at   | TIMESTAMPTZ  | NOT NULL, DEFAULT now() | 마지막 변경 시각    |
 
 ---
 
@@ -129,6 +131,7 @@ Inventory는 하나의 Product에 대한 현재 재고 상태를 관리한다.
 | --- | --- | --- | --- |
 | product_id | BIGINT      | PK, FK     | 대상 Product  |
 | quantity   | BIGINT      | NOT NULL, CHECK (quantity >= 0) | 현재 재고       |
+| created_at | TIMESTAMPTZ | NOT NULL, DEFAULT now() | 최초 입고 시각   |
 | updated_at | TIMESTAMPTZ | NOT NULL, DEFAULT now() | 마지막 변경 시각   |
 
 ---
@@ -153,6 +156,7 @@ Product 1 ───── 1 Inventory
 │ code UNIQUE              │
 │ name                     │
 │ created_at               │
+│ updated_at               │
 └────────────┬─────────────┘
              │
              │ 1 : N
@@ -165,6 +169,7 @@ Product 1 ───── 1 Inventory
 │ product_code             │
 │ name                     │
 │ created_at               │
+│ updated_at               │
 ├──────────────────────────┤
 │ UNIQUE                   │
 │ (tenant_id, product_code)│
@@ -177,6 +182,7 @@ Product 1 ───── 1 Inventory
 ├──────────────────────────┤
 │ product_id PK/FK         │
 │ quantity                 │
+│ created_at               │
 │ updated_at               │
 ├──────────────────────────┤
 │ CHECK(quantity >= 0)     │
@@ -261,11 +267,13 @@ CHECK (quantity >= 0)
 
 ## 시각 컬럼
 
-`created_at`과 `updated_at`은 DB가 채운다.
+모든 테이블에 `created_at`과 `updated_at`을 두고, 값은 DB가 채운다.
 
 * 컬럼에 `DEFAULT now()`를 두고, 원자 쿼리에서도 값을 직접 넣는다
-* JPA Auditing은 native 쿼리에 적용되지 않으므로 엔티티는 `BaseTimeEntity`를 상속하지 않는다
-* Java에서는 `OffsetDateTime`으로 다룬다
+* 엔티티는 매핑 전용 `BaseTimeEntity`를 상속해 두 시각을 읽기만 한다
+* 저장이 native 쿼리라 JPA Auditing은 쓰지 않는다
+* Java에서는 `Instant`로 다루고, 응답을 만들 때 `+09:00`으로 표기한다
+* 업체와 상품의 `updated_at`은 변경 기능이 없어 생성 시각과 같게 남는다
 
 `updated_at`은 `GREATEST(inventory.updated_at, clock_timestamp())`로 갱신한다.
 
@@ -320,7 +328,9 @@ ON CONFLICT (tenant_id, product_code) DO NOTHING
 RETURNING id;
 ```
 
-`RETURNING` 결과가 비어 있으면 이미 있는 상품이다. 같은 Transaction에서 상품을 다시 조회한다.
+`RETURNING` 결과와 관계없이 같은 Transaction에서 상품을 다시 조회한다. `RETURNING`이 비어 있으면 이미 있는 상품이라는 뜻이다.
+
+다시 조회하면 신규 · 기존 상품이 같은 검증 경로를 타고, 응답은 항상 저장된 값을 쓴다. 신규 상품일 때 SELECT가 한 번 더 나간다.
 
 ```sql
 SELECT id, name
