@@ -618,6 +618,53 @@
 
 ---
 
+#### TC-3-05 형식을 벗어난 상품코드 조회
+
+- DisplayName: `[TC-3-05] 허용 문자나 길이를 벗어난 상품코드로 조회하면 형식 오류가 아니라 404 PRODUCT_NOT_FOUND를 반환한다`
+- 테스트: 통합 (API)
+- given
+  - 업체: tenant-001
+  - DB에 직접 넣는다
+    - tenant-001 / A001 / Apple, 재고 10
+- when
+  - 공통
+    - 헤더 `X-Tenant-Id: tenant-001`
+  - 요청 1 (101자)
+    - GET /api/v1/inventory/{`A` 101개}
+  - 요청 2 (공백 포함)
+    - GET /api/v1/inventory/A 001
+- then
+  - 요청 1 · 2 각각
+    - 응답 404
+      - `code`: `PRODUCT_NOT_FOUND`
+      - `message`: `상품을 찾을 수 없습니다.`
+  - DB
+    - tenant-001: 상품 1개 (A001만 있음)
+    - tenant-001 / A001: 재고 10 (변경 없음)
+
+---
+
+#### TC-3-06 대소문자가 다른 상품코드 조회
+
+- DisplayName: `[TC-3-06] 상품코드는 대소문자를 구분해 A001만 있을 때 a001로 조회하면 404 PRODUCT_NOT_FOUND를 반환한다`
+- 테스트: 통합 (API)
+- given
+  - 업체: tenant-001
+  - DB에 직접 넣는다
+    - tenant-001 / A001 / Apple, 재고 10
+- when
+  - GET /api/v1/inventory/a001
+  - 헤더 `X-Tenant-Id: tenant-001`
+- then
+  - 응답 404
+    - `code`: `PRODUCT_NOT_FOUND`
+    - `message`: `상품을 찾을 수 없습니다.`
+  - DB
+    - tenant-001: 상품 1개 (A001 / Apple)
+    - tenant-001 / A001: 재고 10 (변경 없음)
+
+---
+
 ## F4 출고
 
 - 테스트 종류

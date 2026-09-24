@@ -145,6 +145,40 @@ class CurrentStockApiTest {
         assertThat(db.inventoryUpdatedAt("tenant-001", "A001")).isAtSameInstantAs(updatedAtBefore);
     }
 
+    @Test
+    @DisplayName("[TC-3-05] 허용 문자나 길이를 벗어난 상품코드로 조회하면 형식 오류가 아니라 404 PRODUCT_NOT_FOUND를 반환한다")
+    void returnsNotFoundForOutOfFormatProductCode() throws Exception {
+        // given
+        db.insertProduct("tenant-001", "A001", "Apple", 10);
+
+        // when
+        ResultActions overLength = currentStock("tenant-001", "A".repeat(101));
+        ResultActions withSpace = currentStock("tenant-001", "A 001");
+
+        // then
+        expectProductNotFound(overLength);
+        expectProductNotFound(withSpace);
+        assertThat(db.productCount("tenant-001")).isEqualTo(1);
+        assertThat(db.productNames("tenant-001", "A001")).containsExactly("Apple");
+        assertThat(db.inventoryQuantities("tenant-001", "A001")).containsExactly(10L);
+    }
+
+    @Test
+    @DisplayName("[TC-3-06] 상품코드는 대소문자를 구분해 A001만 있을 때 a001로 조회하면 404 PRODUCT_NOT_FOUND를 반환한다")
+    void distinguishesProductCodeCase() throws Exception {
+        // given
+        db.insertProduct("tenant-001", "A001", "Apple", 10);
+
+        // when
+        ResultActions result = currentStock("tenant-001", "a001");
+
+        // then
+        expectProductNotFound(result);
+        assertThat(db.productCount("tenant-001")).isEqualTo(1);
+        assertThat(db.productNames("tenant-001", "A001")).containsExactly("Apple");
+        assertThat(db.inventoryQuantities("tenant-001", "A001")).containsExactly(10L);
+    }
+
     private ResultActions currentStock(String tenantCode, String productCode) throws Exception {
         return mockMvc.perform(get(CURRENT_STOCK_URL, productCode).header(TENANT_HEADER, tenantCode));
     }

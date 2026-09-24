@@ -72,7 +72,7 @@
 - [x] T2-18 `refactor: 수량 검사를 재고 엔티티로 옮김` — repository가 필요 없는 규칙은 엔티티 · 주석 자리 규칙
 - [x] T2-19 `test: 입고 수량 도메인 단위 테스트` — TC-2-14
 
-## F3. 조회 `feature/query` — TC-3-01 ~ TC-3-04
+## F3. 조회 `feature/query` — TC-3-01 ~ TC-3-06
 
 > 리뷰: reviewer만 (verifier 생략)
 
@@ -80,6 +80,7 @@
 - [x] T3-2 `test: 재고 조회 성공·실패 케이스` — TC-3-01 ~ TC-3-03
 - [x] T3-3 `test: 재고 조회 엣지 케이스` — TC-3-04
 - [x] T3-4 `test: F3 .http 실행 케이스`
+- [x] T3-6 `test: 조회 상품코드 형식 · 대소문자 케이스` — TC-3-05 ~ TC-3-06
 - [ ] T3-5 `docs: F3 작업 로그`
 
 ## F4. 출고 `feature/outbound` — TC-4-01 ~ TC-4-09
