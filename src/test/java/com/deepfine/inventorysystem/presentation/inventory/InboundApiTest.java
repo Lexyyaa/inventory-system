@@ -263,8 +263,40 @@ class InboundApiTest {
         // then
         min.andExpect(status().isOk()).andExpect(jsonPath("$.quantity").value(1));
         max.andExpect(status().isOk()).andExpect(jsonPath("$.quantity").value(1_000_000_000L));
+        expectSeoulOffset(min);
+        expectSeoulOffset(max);
         assertThat(db.inventoryQuantities("tenant-001", "A001")).containsExactly(1L);
         assertThat(db.inventoryQuantities("tenant-001", "B001")).containsExactly(1_000_000_000L);
+    }
+
+    // 05에 없는 케이스 (TC 추가 제안): 상품명 길이는 DB VARCHAR(255)와 같게 문자(코드포인트) 단위로 센다
+    @Test
+    @DisplayName("이모지처럼 UTF-16 두 단위인 문자 255자 상품명은 받고, 256자는 INVALID_REQUEST로 거부한다")
+    void countsProductNameLengthByCharacter() throws Exception {
+        // given
+        String emojiName255 = "😀".repeat(255);
+        String emojiName256 = "😀".repeat(256);
+        assertThat(emojiName255.length()).isEqualTo(510);
+        assertThat(db.productNames("tenant-001", "A001")).isEmpty();
+        assertThat(db.productNames("tenant-001", "B001")).isEmpty();
+
+        // when
+        ResultActions maxLength = inbound("tenant-001", body("A001", emojiName255, 10));
+        ResultActions overLength = inbound("tenant-001", body("B001", emojiName256, 10));
+
+        // then
+        maxLength
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.productCode").value("A001"))
+                .andExpect(jsonPath("$.productName").value(emojiName255))
+                .andExpect(jsonPath("$.quantity").value(10));
+        expectSeoulOffset(maxLength);
+        expectError(overLength, "INVALID_REQUEST", MISSING_MESSAGE);
+        assertThat(db.productNames("tenant-001", "A001")).containsExactly(emojiName255);
+        String storedName = db.productNames("tenant-001", "A001").getFirst();
+        assertThat(storedName.codePointCount(0, storedName.length())).isEqualTo(255);
+        assertThat(db.inventoryQuantities("tenant-001", "A001")).containsExactly(10L);
+        assertThat(db.productNames("tenant-001", "B001")).isEmpty();
     }
 
     // 05에 없는 케이스 (TC 추가 제안): PostgreSQL 문자열에 저장할 수 없는 상품명은 DB까지 가지 않고 400이다
