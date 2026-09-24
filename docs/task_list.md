@@ -8,7 +8,7 @@
 > - TC: [05](design/05-test-cases.md)
 >
 
-**현재:** F4 / T4-7
+**현재:** F5 / T5-1
 
 ## 규칙
 
@@ -92,7 +92,7 @@
 - [x] T4-5 `test: 출고 동시성` — TC-4-07 ~ TC-4-09
 - [x] T4-6 `test: F4 .http 실행 케이스`
 - [x] T4-8 `test: 출고 판정 순서 · 요청 검증 케이스` — TC-4-11 ~ TC-4-12
-- [ ] T4-7 `docs: F4 작업 로그`
+- [x] T4-7 `docs: F4 작업 로그`
 
 ## F5. 마무리 `feature/docs`
 
@@ -128,8 +128,12 @@
 | F2 | verifier | 낮음 | 테스트 | 수량 상한이 설정값에서 오는지 검증하지 않음 (하드코딩해도 통과) | |
 | F2 | verifier | 낮음 | 테스트 | 동시성 TC가 실제 경합을 보장하지 않음 (스레드 3개) | |
 | F2 | reviewer | 확인 | 문서 | Long 범위를 넘는 quantity는 400 `INVALID_REQUEST`(형식) — 02 §8 "상한 초과 → INVALID_QUANTITY"와 04 §2 "타입 → INVALID_REQUEST" 중 어느 쪽인지 문서 미정 (현재 동작은 04 §2) | |
-| F2 | verifier | 낮음 | 코드 | F4 선행: `InventoryException`에 detail 생성자 없음 — 출고 문구를 넘기려면 추가 필요 | |
+| F2 | verifier | 낮음 | 코드 | F4 선행: `InventoryException`에 detail 생성자 없음 — 출고 문구를 넘기려면 추가 필요 | 고침 (03f610e) |
 | F2 | verifier | 낮음 | 코드 | 상품명 `@CodePointLength`는 springdoc이 읽지 않아 Swagger 스키마에 `maxLength: 255`가 빠졌을 수 있음 (미확인) — 필요하면 `@Schema(maxLength = 255)` | |
+| F4 | verifier | 낮음 | 문서 | 04 §4 성공 응답에 "동시에 처리된 요청은 서로 다른 quantity를 받을 수 있다"가 없음 (ADR-18은 입출고 공통, 04 §3에만 있음) — 출고 Swagger 설명에는 있음 | |
+| F4 | verifier | 낮음 | 테스트 | TC-4-09는 한 번 실행에 출고 200 · 409 중 한 갈래만 검증 (05가 허용한 설계) | |
+| F4 | verifier | 낮음 | 문서 | 05 TC-4-04 then에 재고 `updated_at` 불변 항목 없음 (TC-4-03 · 06에는 있음) | |
+| F4 | verifier | 낮음 | 문서 | 재고 행 없음 상태를 출고는 409, 조회는 500으로 처리 (03 §11 · §13이 각각 정한 대로, 결함 아님) | |
 
 ---
 
