@@ -22,6 +22,8 @@
 - [ ] "무시한다"고 정한 입력 필드에 Bean Validation이 남아 있지 않다 — 무시될 값 때문에 400
 - [ ] `Info` · `Command`에 domain Enum · VO · 엔티티를 담지 않는다 — presentation이 domain을 참조해 ArchUnit 실패 (`name()` · 원시값으로 푼다)
 - [ ] `catch (RuntimeException | Exception)`이 `BusinessException`을 삼키지 않는다 — 원래 에러 코드 대신 엉뚱한 응답
+- [ ] 문자열 길이 상한은 DB처럼 글자(코드포인트) 단위로 센다 (`@CodePointLength`) — `@Size`는 UTF-16 단위라 이모지 상품명이 DB 범위 안인데 400
+- [ ] PostgreSQL에 저장할 수 없는 NUL · 짝 없는 서로게이트는 Request에서 400으로 막는다 — NUL은 500, 서로게이트는 다른 문자로 저장돼 다음 입고가 409
 - [ ] 컨트롤러 매핑에 `consumes` · `produces`를 두지 않는다 — Content-Type 오류가 업체 확인보다 먼저 400 `INVALID_REQUEST`가 되어 04 §2 순서가 뒤집힌다 (TC-2-08 요청 4)
 - [ ] 출고의 `INVALID_QUANTITY`는 출고 문구("출고 수량이 허용 범위를 벗어났습니다.")를 `detail`로 넘긴다 — `ErrorCode` 기본 문구가 입고 문구라 빠뜨리면 출고 응답에 "입고 수량이 …"가 나간다
 - [ ] 검사 순서가 04 §2 "오류 판정 순서"와 같다 (Tenant → 형식 → 필수값·길이 → 수량 범위 → 상품 존재 → 상품·재고 상태) — 같은 요청에 설계와 다른 에러 코드
@@ -42,6 +44,8 @@
 - [ ] 동시성 처리가 03 §9~§15(원자 SQL · READ COMMITTED)와 같다 — 임의로 바꾸면 동시성 테스트 근거가 사라진다
 
 ## JPA · 스키마
+
+- [ ] native 쿼리(RETURNING · JOIN)의 `timestamptz`를 인프라 projection으로 받아 RepositoryImpl에서 `OffsetDateTime`으로 바꾼다 — Hibernate 6.6이 `Instant`로 읽어 도메인 record로 바로 받으면 변환 실패
 
 - [ ] 03 §7의 UNIQUE · CHECK · FK가 `schema.sql`에 있고 엔티티 매핑이 그와 같다 — `ddl-auto: validate`는 제약을 검사하지 않는다
 - [ ] `schema.sql`은 `CREATE TABLE IF NOT EXISTS`, `data.sql`은 `ON CONFLICT DO NOTHING`이다 — 재기동할 때 기동이 실패한다
