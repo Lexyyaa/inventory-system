@@ -8,7 +8,7 @@
 > - TC: [05](design/05-test-cases.md)
 >
 
-**현재:** F3 / T3-1
+**현재:** F4 / T4-1
 
 ## 규칙
 
@@ -21,22 +21,6 @@
 - 05의 모든 `TC`는 아래 어딘가의 범위에 한 번 이상 들어가야 한다 (`verifier`가 검사)
 - 기능 블록의 `.http 실행 케이스` 줄과 `작업 로그` 줄 (F1에는 작업 로그 줄만 있다)
   - `implementer`가 아니라 `/run-feature`가 처리한다
-
-## 시간 계획
-
-**시작:** 15:30
-**제한:** 10:00
-
-| 구간 | 목표 종료 | 실제 종료 |
-|---|---|---|
-| F0 설계 문서 · 점검 | +1:30 (17:00) | 16:49 |
-| F1 기초 설정 | +2:30 (18:00) | 17:13 |
-| F2 입고 | +4:30 (20:00) | 18:16 |
-| F2 코드 리뷰 · 반영 | | 20:10 |
-| F3 조회 | +5:15 (20:45) | |
-| F4 출고 | +7:00 (22:30) | |
-| F5 마무리 | +9:00 (00:30) | |
-| 버퍼 | +10:00 (01:30) | |
 
 ---
 
@@ -63,7 +47,7 @@
 - [x] T1-6 `test: DB 제약 조건 검증` — TC-1-03 ~ TC-1-04
 - [x] T1-7 `docs: F1 작업 로그`
 
-## F2. 입고 `feature/inbound` — TC-2-01 ~ TC-2-13
+## F2. 입고 `feature/inbound` — TC-2-01 ~ TC-2-14
 
 - [x] T2-1 `feat: 상품·재고 엔티티 구현`
 - [x] T2-2 `feat: 상품 생성 및 재고 증가 원자 쿼리 구현`
@@ -85,16 +69,19 @@
 - [x] T2-15 `docs: 코드 리뷰 합의 규칙 반영` — CLAUDE.md 3개 · 체크리스트 · 03 시각 컬럼
 - [x] T2-16 `docs: F2 코드 리뷰 작업 로그`
 - [x] T2-17 `refactor: 업체 확인을 도메인 서비스로 분리` — TenantService
+- [x] T2-18 `refactor: 수량 검사를 재고 엔티티로 옮김` — repository가 필요 없는 규칙은 엔티티 · 주석 자리 규칙
+- [x] T2-19 `test: 입고 수량 도메인 단위 테스트` — TC-2-14
 
-## F3. 조회 `feature/query` — TC-3-01 ~ TC-3-04
+## F3. 조회 `feature/query` — TC-3-01 ~ TC-3-06
 
 > 리뷰: reviewer만 (verifier 생략)
 
-- [ ] T3-1 `feat: 현재 재고 조회 API 구현` — GET /api/v1/inventory/{productCode} · ApiDocs
-- [ ] T3-2 `test: 재고 조회 성공·실패 케이스` — TC-3-01 ~ TC-3-03
-- [ ] T3-3 `test: 재고 조회 엣지 케이스` — TC-3-04
-- [ ] T3-4 `test: F3 .http 실행 케이스`
-- [ ] T3-5 `docs: F3 작업 로그`
+- [x] T3-1 `feat: 현재 재고 조회 API 구현` — GET /api/v1/inventory/{productCode} · ApiDocs
+- [x] T3-2 `test: 재고 조회 성공·실패 케이스` — TC-3-01 ~ TC-3-03
+- [x] T3-3 `test: 재고 조회 엣지 케이스` — TC-3-04
+- [x] T3-4 `test: F3 .http 실행 케이스`
+- [x] T3-6 `test: 조회 상품코드 형식 · 대소문자 케이스` — TC-3-05 ~ TC-3-06
+- [x] T3-5 `docs: F3 작업 로그`
 
 ## F4. 출고 `feature/outbound` — TC-4-01 ~ TC-4-09
 
@@ -159,3 +146,4 @@
     - DB 이식성: 원자 SQL이 PostgreSQL 문법(`ON CONFLICT`, `RETURNING`)이라 DB를 바꾸면 세 쿼리를 다시 써야 함
     - `X-Tenant-Id`에 제어 문자(NUL)가 오면 Tomcat이 Spring 전에 HTML 400으로 막음 (`{code, message}` 형식 아님)
     - 재고 합이 BIGINT 범위를 넘으면 500 (한 건 상한 10억이라 약 92억 번 입고해야 생김)
+    - 조회 경로의 `;` 뒤는 경로 매개변수로 무시됨 (`/inventory/A001;x` → A001 조회 200, `%3B`로 인코딩하면 404)

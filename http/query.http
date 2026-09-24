@@ -1,0 +1,77 @@
+# 현재 재고 조회 API 실측 (F3)
+# 실행: 서버를 띄운 뒤 python3 scripts/run_http.py http/query.http
+# 순서 의존: 위에서 아래로. 준비 입고로 Q-A001 · Q-C001을 만든 뒤 조회한다
+# 매번 빈 DB에서 시작한다 (docker compose down -v && docker compose up -d)
+
+@host = http://localhost:8080
+
+### [준비] tenant-001 Q-A001 입고
+# @expect 200
+# @expect $.quantity == 10
+POST {{host}}/api/v1/inventory/inbound
+X-Tenant-Id: tenant-001
+Content-Type: application/json
+
+{ "productCode": "Q-A001", "productName": "Apple", "quantity": 10 }
+
+### [준비] tenant-002 Q-A001 입고
+# @expect 200
+# @expect $.quantity == 20
+POST {{host}}/api/v1/inventory/inbound
+X-Tenant-Id: tenant-002
+Content-Type: application/json
+
+{ "productCode": "Q-A001", "productName": "Samsung", "quantity": 20 }
+
+### [준비] tenant-001 Q-C001 입고 (tenant-001에만 있는 상품)
+# @expect 200
+# @expect $.quantity == 5
+POST {{host}}/api/v1/inventory/inbound
+X-Tenant-Id: tenant-001
+Content-Type: application/json
+
+{ "productCode": "Q-C001", "productName": "Cherry", "quantity": 5 }
+
+### [TC-3-01] 등록된 상품 조회
+# @expect 200
+# @expect $.productCode == "Q-A001"
+# @expect $.productName == "Apple"
+# @expect $.quantity == 10
+# @db SELECT i.quantity FROM inventory i JOIN product p ON p.id = i.product_id JOIN tenant t ON t.id = p.tenant_id WHERE t.code = 'tenant-001' AND p.product_code = 'Q-A001' => 10
+GET {{host}}/api/v1/inventory/Q-A001
+X-Tenant-Id: tenant-001
+
+### [TC-3-02] 다른 업체의 같은 상품코드 조회
+# @expect 200
+# @expect $.productCode == "Q-A001"
+# @expect $.productName == "Samsung"
+# @expect $.quantity == 20
+# @db SELECT i.quantity FROM inventory i JOIN product p ON p.id = i.product_id JOIN tenant t ON t.id = p.tenant_id WHERE t.code = 'tenant-002' AND p.product_code = 'Q-A001' => 20
+GET {{host}}/api/v1/inventory/Q-A001
+X-Tenant-Id: tenant-002
+
+### [TC-3-03] 등록되지 않은 상품 조회
+# @expect 404
+# @expect $.code == "PRODUCT_NOT_FOUND"
+# @db SELECT COUNT(*) FROM product WHERE product_code = 'Q-B001' => 0
+GET {{host}}/api/v1/inventory/Q-B001
+X-Tenant-Id: tenant-001
+
+### [TC-3-04] 다른 업체에만 있는 상품 조회
+# @expect 404
+# @expect $.code == "PRODUCT_NOT_FOUND"
+# @db SELECT COUNT(*) FROM product p JOIN tenant t ON t.id = p.tenant_id WHERE t.code = 'tenant-002' AND p.product_code = 'Q-C001' => 0
+# @db SELECT i.quantity FROM inventory i JOIN product p ON p.id = i.product_id JOIN tenant t ON t.id = p.tenant_id WHERE t.code = 'tenant-001' AND p.product_code = 'Q-C001' => 5
+GET {{host}}/api/v1/inventory/Q-C001
+X-Tenant-Id: tenant-002
+
+### [TC-1-01] 업체 헤더 없이 조회
+# @expect 400
+# @expect $.code == "INVALID_TENANT"
+GET {{host}}/api/v1/inventory/Q-A001
+
+### [TC-1-02] 등록되지 않은 업체로 조회
+# @expect 400
+# @expect $.code == "INVALID_TENANT"
+GET {{host}}/api/v1/inventory/Q-A001
+X-Tenant-Id: tenant-999

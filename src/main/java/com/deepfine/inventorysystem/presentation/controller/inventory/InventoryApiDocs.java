@@ -84,4 +84,63 @@ public interface InventoryApiDocs {
                                                         "{\"code\": \"INTERNAL_SERVER_ERROR\", \"message\": \"서버 오류가 발생했습니다.\"}")))
     })
     InventoryResponse.Inbound inbound(@Parameter(hidden = true) Long tenantId, InventoryRequest.Inbound request);
+
+    @Operation(summary = "현재 재고 조회", description = """
+            요청 업체에 속한 상품의 현재 재고를 조회한다.
+
+            - 상품코드는 요청 업체 안에서 찾는다. 다른 업체에만 있는 상품코드는 없는 상품으로 보고 404를 돌려준다.
+            - 경로의 상품코드는 형식을 검증하지 않는다. 허용 문자 · 길이를 벗어난 코드는 등록될 수 없어 404다.
+            - 응답의 quantity는 조회 시점에 커밋되어 있던 재고 수량이다. 조회는 입고 · 출고를 막지 않아 응답 뒤에 재고가 바뀔 수 있다.
+            """)
+    @Parameter(
+            name = TenantInterceptor.TENANT_HEADER,
+            in = ParameterIn.HEADER,
+            required = true,
+            description = "업체 코드. 없거나 비어 있거나 등록되지 않았으면 400 INVALID_TENANT",
+            example = "tenant-001")
+    @Parameter(
+            name = "productCode",
+            in = ParameterIn.PATH,
+            required = true,
+            description = "상품 코드 (대소문자 구분). 요청 업체에 없으면 404 PRODUCT_NOT_FOUND",
+            example = "A001")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "조회 성공"),
+        @ApiResponse(
+                responseCode = "400",
+                description = "INVALID_TENANT",
+                content =
+                        @Content(
+                                schema = @Schema(implementation = ErrorResponse.class),
+                                examples =
+                                        @ExampleObject(
+                                                name = "INVALID_TENANT",
+                                                summary = "업체 정보 누락 또는 미등록",
+                                                value =
+                                                        "{\"code\": \"INVALID_TENANT\", \"message\": \"Tenant 정보가 없거나 등록되지 않았습니다.\"}"))),
+        @ApiResponse(
+                responseCode = "404",
+                description = "PRODUCT_NOT_FOUND",
+                content =
+                        @Content(
+                                schema = @Schema(implementation = ErrorResponse.class),
+                                examples =
+                                        @ExampleObject(
+                                                name = "PRODUCT_NOT_FOUND",
+                                                summary = "요청 업체에 해당 상품코드의 상품이 없음",
+                                                value =
+                                                        "{\"code\": \"PRODUCT_NOT_FOUND\", \"message\": \"상품을 찾을 수 없습니다.\"}"))),
+        @ApiResponse(
+                responseCode = "500",
+                description = "INTERNAL_SERVER_ERROR",
+                content =
+                        @Content(
+                                schema = @Schema(implementation = ErrorResponse.class),
+                                examples =
+                                        @ExampleObject(
+                                                name = "INTERNAL_SERVER_ERROR",
+                                                value =
+                                                        "{\"code\": \"INTERNAL_SERVER_ERROR\", \"message\": \"서버 오류가 발생했습니다.\"}")))
+    })
+    InventoryResponse.CurrentStock getCurrentStock(@Parameter(hidden = true) Long tenantId, String productCode);
 }

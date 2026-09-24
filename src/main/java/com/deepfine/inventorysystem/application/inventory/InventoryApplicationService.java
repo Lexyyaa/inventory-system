@@ -1,9 +1,11 @@
 package com.deepfine.inventorysystem.application.inventory;
 
+import com.deepfine.inventorysystem.domain.inventory.Inventory;
 import com.deepfine.inventorysystem.domain.inventory.InventoryService;
 import com.deepfine.inventorysystem.domain.inventory.InventoryState;
 import com.deepfine.inventorysystem.domain.product.Product;
 import com.deepfine.inventorysystem.domain.product.ProductService;
+import com.deepfine.inventorysystem.support.properties.InventoryProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,6 +16,7 @@ public class InventoryApplicationService {
 
     private final ProductService productService;
     private final InventoryService inventoryService;
+    private final InventoryProperties inventoryProperties;
 
     /**
      * 입고 <br>
@@ -22,9 +25,16 @@ public class InventoryApplicationService {
      */
     @Transactional
     public InventoryInfo.Inbound inbound(InventoryCommand.Inbound command) {
-        inventoryService.validateInboundQuantity(command.quantity());
+        Inventory.validateInboundQuantity(command.quantity(), inventoryProperties.maxQuantity());
         Product product = productService.getOrCreate(command.tenantId(), command.productCode(), command.productName());
         InventoryState changed = inventoryService.increase(product.getId(), command.quantity());
         return InventoryInfo.Inbound.of(product, changed);
+    }
+
+    @Transactional(readOnly = true)
+    public InventoryInfo.CurrentStock getCurrentStock(InventoryCommand.CurrentStock command) {
+        Product product = productService.get(command.tenantId(), command.productCode());
+        Inventory inventory = inventoryService.get(product.getId());
+        return InventoryInfo.CurrentStock.of(product, inventory);
     }
 }

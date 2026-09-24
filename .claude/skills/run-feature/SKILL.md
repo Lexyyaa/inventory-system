@@ -30,7 +30,6 @@ disable-model-invocation: true
   - Docker가 꺼져 있다 (`docker info`)
 - task_list에 적힌 `feature/{name}` 브랜치로 간다
   - 브랜치 · 커밋 규칙: 루트 `CLAUDE.md` "작업 흐름"
-- 시작 시각을 기억해 둔다
 
 ## 1. 구현
 
@@ -103,7 +102,6 @@ disable-model-invocation: true
   - 반영은 6단계에서 승인받는다
 - task_list를 갱신한다
   - 2단계의 중간 · 낮음을 "리뷰 백로그" 표에 적는다
-  - 시간 계획에서 이 기능(F) 행의 실제 종료 시각을 적는다
   - **현재**를 다음 기능의 첫 작업으로 옮긴다
 - task_list의 `작업 로그` 작업 줄로 커밋한다
   - 위 task_list 갱신을 같은 커밋에 넣는다
@@ -119,7 +117,7 @@ disable-model-invocation: true
 🛑 멈춤: 아래를 보고하고 결정을 받는다.
 
 ```
-## $ARGUMENTS 완료 (소요 hh:mm · 누적 hh:mm / 제한 hh:mm)
+## $ARGUMENTS 완료
 - 커밋: n개 (목록)
 - 테스트: 전체 n개 통과 · 이번 기능 TC n/n
 - 실측: 요청 n건 — 성공 n / 기대와 다름 n
@@ -129,8 +127,8 @@ disable-model-invocation: true
 - 구현 체크리스트 추가안 (없으면 "없음")
 - TC 추가 제안(1단계에서 기록한 것): 05 추가안으로 보여주고 승인받는다 (백로그로 보내지 않는다)
 
-## 일정
-- 남은 기능: F… (예상 hh:mm) — 시간이 부족하면 뺄 후보: …
+## 다음
+- 남은 기능: F…
 
 PR을 올릴까요? (push → PR 생성. 머지는 GitHub에서 직접)
 ```

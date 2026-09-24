@@ -76,6 +76,7 @@
 - 테스트 DB에도 `data.sql` seed(`tenant-001`, `tenant-002`)가 들어간다
   - 건수 단언은 테스트가 만든 상품코드로 필터한다
 - 테스트에 필요한 상품 · 재고는 테스트가 직접 만든다
+  - 입고 API를 거치지 않고 `support/InventoryTestDb`로 DB에 직접 넣는다 (입고가 깨져도 조회 · 출고 테스트가 같이 깨지지 않게)
   - 각 테스트 전에 product · inventory만 비운다. seed 업체는 그대로 둔다
 - POST 요청에는 `Content-Type: application/json`을 붙인다
 - DB 제약 테스트(데이터 제약 케이스)

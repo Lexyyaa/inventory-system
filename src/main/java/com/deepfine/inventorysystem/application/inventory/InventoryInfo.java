@@ -1,5 +1,6 @@
 package com.deepfine.inventorysystem.application.inventory;
 
+import com.deepfine.inventorysystem.domain.inventory.Inventory;
 import com.deepfine.inventorysystem.domain.inventory.InventoryState;
 import com.deepfine.inventorysystem.domain.product.Product;
 import java.time.Instant;
@@ -13,6 +14,14 @@ public final class InventoryInfo {
 
         public static Inbound of(Product product, InventoryState state) {
             return new Inbound(product.getProductCode(), product.getName(), state.quantity(), state.updatedAt());
+        }
+    }
+
+    public record CurrentStock(String productCode, String productName, long quantity, Instant updatedAt) {
+
+        public static CurrentStock of(Product product, Inventory inventory) {
+            return new CurrentStock(
+                    product.getProductCode(), product.getName(), inventory.getQuantity(), inventory.getUpdatedAt());
         }
     }
 }
