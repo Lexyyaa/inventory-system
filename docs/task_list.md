@@ -83,12 +83,12 @@
 - [x] T3-6 `test: 조회 상품코드 형식 · 대소문자 케이스` — TC-3-05 ~ TC-3-06
 - [x] T3-5 `docs: F3 작업 로그`
 
-## F4. 출고 `feature/outbound` — TC-4-01 ~ TC-4-09
+## F4. 출고 `feature/outbound` — TC-4-01 ~ TC-4-10
 
 - [ ] T4-1 `feat: 재고 조건부 차감 쿼리 구현`
 - [ ] T4-2 `feat: 출고 API 구현` — POST /api/v1/inventory/outbound · ApiDocs
 - [ ] T4-3 `test: 출고 성공·실패 케이스` — TC-4-01 ~ TC-4-04
-- [ ] T4-4 `test: 출고 엣지 케이스` — TC-4-05 ~ TC-4-06
+- [ ] T4-4 `test: 출고 엣지 케이스` — TC-4-05 ~ TC-4-06, TC-4-10
 - [ ] T4-5 `test: 출고 동시성` — TC-4-07 ~ TC-4-09
 - [ ] T4-6 `test: F4 .http 실행 케이스`
 - [ ] T4-7 `docs: F4 작업 로그`
