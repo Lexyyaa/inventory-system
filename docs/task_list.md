@@ -8,7 +8,7 @@
 > - TC: [05](design/05-test-cases.md)
 >
 
-**현재:** F2 / T2-8
+**현재:** F3 / T3-1
 
 ## 규칙
 
@@ -31,7 +31,7 @@
 |---|---|---|
 | F0 설계 문서 · 점검 | +1:30 (17:00) | 16:49 |
 | F1 기초 설정 | +2:30 (18:00) | 17:13 |
-| F2 입고 | +4:30 (20:00) | |
+| F2 입고 | +4:30 (20:00) | 18:16 |
 | F3 조회 | +5:15 (20:45) | |
 | F4 출고 | +7:00 (22:30) | |
 | F5 마무리 | +9:00 (00:30) | |
@@ -71,7 +71,7 @@
 - [x] T2-5 `test: 입고 엣지 케이스` — TC-2-09 ~ TC-2-10
 - [x] T2-6 `test: 입고 동시성` — TC-2-11 ~ TC-2-13
 - [x] T2-7 `test: F2 .http 실행 케이스`
-- [ ] T2-8 `docs: F2 작업 로그`
+- [x] T2-8 `docs: F2 작업 로그`
 
 ## F3. 조회 `feature/query` — TC-3-01 ~ TC-3-04
 
@@ -113,7 +113,23 @@
 | F | 출처 | 심각도 | 쪽 | 내용 | 처리 |
 |---|---|---|---|---|---|
 | F1 | reviewer | 낮음 | 코드 | `TransactionRunner` 주석의 "용도" 단락이 REPEATABLE READ 락 조회 용도를 설명한다 (이 과제는 쓰지 않음, "용도:트랜잭션" 띄어쓰기) | |
-| F1 | reviewer | 확인 | 코드 | `X-Tenant-Id`에 제어 문자(NUL)가 오면 응답 형식이 `{code, message}`인지, 500이 나는지 미확인 — `.http` 실측 때 curl로 확인 | |
+| F1 | reviewer | 확인 | 코드 | `X-Tenant-Id`에 제어 문자(NUL)가 오면 응답 형식이 `{code, message}`인지, 500이 나는지 미확인 — `.http` 실측 때 curl로 확인 | F2 실측: Tomcat이 Spring 전에 HTML 400으로 막음 (500 아님) → README 한계 후보 |
+| F2 | reviewer | 낮음 | 문서 | 03 §9는 "RETURNING이 비면 재조회"인데 구현은 항상 재조회 (결과 같음, 신규 상품일 때 SELECT 1회 추가) | F2 리뷰 반영에서 03 §9 문구를 구현에 맞춤 |
+| F2 | reviewer | 낮음 | 문서 | native `timestamptz`가 Hibernate 6.6에서 `Instant`로 와서 RETURNING을 인프라 projection으로 받음 — src/main/CLAUDE.md RETURNING 규칙 문구와 다름 | F2 리뷰 반영에서 규칙 문구 개정 |
+| F2 | reviewer | 낮음 | 테스트 | 05에 없는 테스트 3건(수량 양 끝값, NUL · 짝 없는 서로게이트, 이모지 255/256자)이 코드에만 있음 — 05 추가 제안 | |
+| F2 | verifier | 중간 | 테스트 | 상품코드 허용 문자(`A 001` 등) 위반 TC 없음 — `@Pattern`을 지워도 F2 테스트가 통과 | |
+| F2 | verifier | 중간 | 테스트 | 04 §2 순서 조합 "필수값 → 수량", "수량 → 상품 상태" TC 없음 | |
+| F2 | verifier | 중간 | 문서 | 02 §3 · 04 §3 "1~255자"의 세는 단위 미정 | F2 리뷰 반영에서 "글자(문자) 단위" 명시 |
+| F2 | verifier | 중간 | 테스트 | "정의되지 않은 필드 무시" TC 없음, Boot 기본값에 기대고 yml 명시 없음 | |
+| F2 | verifier | 낮음 | 문서 | 04 §3에 길이 · 허용 문자 위반 문구가 없어 101자 상품코드에도 "필수 요청 정보가 누락되었습니다." | |
+| F2 | reviewer · verifier | 확인 | 문서 | `@NotBlank`는 U+0020 이하만 공백으로 봄 — 전각 공백(U+3000) · NBSP만인 상품명은 통과. 02 §3 "공백"의 범위 미정 | |
+| F2 | verifier | 낮음 | 테스트 | 상품코드 대소문자 구분(A001 · a001 별개) TC 없음 | |
+| F2 | verifier | 낮음 | 테스트 | updatedAt을 오프셋만 단언하고 DB `updated_at` 값과 대조하지 않음 | |
+| F2 | verifier | 낮음 | 테스트 | 수량 상한이 설정값에서 오는지 검증하지 않음 (하드코딩해도 통과) | |
+| F2 | verifier | 낮음 | 테스트 | 동시성 TC가 실제 경합을 보장하지 않음 (스레드 3개) | |
+| F2 | reviewer | 확인 | 문서 | Long 범위를 넘는 quantity는 400 `INVALID_REQUEST`(형식) — 02 §8 "상한 초과 → INVALID_QUANTITY"와 04 §2 "타입 → INVALID_REQUEST" 중 어느 쪽인지 문서 미정 (현재 동작은 04 §2) | |
+| F2 | verifier | 낮음 | 코드 | F4 선행: `InventoryException`에 detail 생성자 없음 — 출고 문구를 넘기려면 추가 필요 | |
+| F2 | verifier | 낮음 | 코드 | 상품명 `@CodePointLength`는 springdoc이 읽지 않아 Swagger 스키마에 `maxLength: 255`가 빠졌을 수 있음 (미확인) — 필요하면 `@Schema(maxLength = 255)` | |
 
 ---
 
