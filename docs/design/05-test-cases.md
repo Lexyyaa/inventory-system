@@ -841,6 +841,59 @@
 
 ---
 
+#### TC-4-11 출고 판정 순서 (수량 → 상품 존재)
+
+- DisplayName: `[TC-4-11] 등록되지 않은 상품에 수량 0으로 출고하면 상품 없음보다 수량 오류가 먼저라 400 INVALID_QUANTITY로 거부한다`
+- 테스트: 통합 (API)
+- given
+  - tenant-001에 A001 상품 없음
+- when
+  - `POST /api/v1/inventory/outbound`
+  - 헤더 `X-Tenant-Id: tenant-001`
+  - 본문 `{"productCode":"A001","quantity":0}`
+- then
+  - 응답 400
+    - `code`: `INVALID_QUANTITY`
+    - `message`: `출고 수량이 허용 범위를 벗어났습니다.`
+  - DB
+    - tenant-001: 상품 0개
+
+---
+
+#### TC-4-12 출고 요청 검증
+
+- DisplayName: `[TC-4-12] 출고 요청의 필수값 누락과 정수가 아닌 수량은 INVALID_REQUEST, 상한 초과는 INVALID_QUANTITY로 거부하고 재고를 유지한다`
+- 테스트: 통합 (API)
+- given
+  - DB에 직접 넣는다: tenant-001 / A001 / Apple, 재고 10
+- when
+  - 공통
+    - `POST /api/v1/inventory/outbound`
+    - 헤더 `X-Tenant-Id: tenant-001`
+  - 요청 1 (productCode 누락)
+    - 본문 `{"quantity":5}`
+  - 요청 2 (정수가 아닌 수량)
+    - 본문 `{"productCode":"A001","quantity":1.5}`
+  - 요청 3 (상한 초과)
+    - 본문 `{"productCode":"A001","quantity":1000000001}`
+- then
+  - 요청 1
+    - 응답 400
+      - `code`: `INVALID_REQUEST`
+      - `message`: `필수 요청 정보가 누락되었습니다.`
+  - 요청 2
+    - 응답 400
+      - `code`: `INVALID_REQUEST`
+      - `message`: `요청 형식이 올바르지 않습니다.`
+  - 요청 3
+    - 응답 400
+      - `code`: `INVALID_QUANTITY`
+      - `message`: `출고 수량이 허용 범위를 벗어났습니다.`
+  - DB
+    - tenant-001 / A001: 재고 10 (변경 없음)
+
+---
+
 ### 동시성 케이스
 
 #### TC-4-07 두 건 동시 출고

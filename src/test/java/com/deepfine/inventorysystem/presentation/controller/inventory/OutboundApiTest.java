@@ -33,6 +33,8 @@ class OutboundApiTest {
     private static final String INVALID_QUANTITY_MESSAGE = "출고 수량이 허용 범위를 벗어났습니다.";
     private static final String PRODUCT_NOT_FOUND_MESSAGE = "상품을 찾을 수 없습니다.";
     private static final String INSUFFICIENT_STOCK_MESSAGE = "출고 수량이 현재 재고보다 많습니다.";
+    private static final String MISSING_MESSAGE = "필수 요청 정보가 누락되었습니다.";
+    private static final String MALFORMED_MESSAGE = "요청 형식이 올바르지 않습니다.";
     private static final ZoneOffset SEOUL_OFFSET = ZoneOffset.ofHours(9);
 
     @Autowired
@@ -185,6 +187,42 @@ class OutboundApiTest {
         expectError(tenant002, HttpStatus.NOT_FOUND, "PRODUCT_NOT_FOUND", PRODUCT_NOT_FOUND_MESSAGE);
         assertThat(db.productNames("tenant-002", "A001")).isEmpty();
         assertThat(db.productCount("tenant-002")).isZero();
+        assertThat(db.inventoryQuantities("tenant-001", "A001")).containsExactly(10L);
+    }
+
+    @Test
+    @DisplayName("[TC-4-11] 등록되지 않은 상품에 수량 0으로 출고하면 상품 없음보다 수량 오류가 먼저라 400 INVALID_QUANTITY로 거부한다")
+    void checksQuantityBeforeProductExistence() throws Exception {
+        // given
+        assertThat(db.productNames("tenant-001", "A001")).isEmpty();
+
+        // when
+        ResultActions result = outbound("tenant-001", """
+                {"productCode":"A001","quantity":0}""");
+
+        // then
+        expectError(result, HttpStatus.BAD_REQUEST, "INVALID_QUANTITY", INVALID_QUANTITY_MESSAGE);
+        assertThat(db.productCount("tenant-001")).isZero();
+    }
+
+    @Test
+    @DisplayName("[TC-4-12] 출고 요청의 필수값 누락과 정수가 아닌 수량은 INVALID_REQUEST, 상한 초과는 INVALID_QUANTITY로 거부하고 재고를 유지한다")
+    void rejectsInvalidOutboundRequest() throws Exception {
+        // given
+        db.insertProduct("tenant-001", "A001", "Apple", 10);
+
+        // when
+        ResultActions missingCode = outbound("tenant-001", """
+                {"quantity":5}""");
+        ResultActions fractional = outbound("tenant-001", """
+                {"productCode":"A001","quantity":1.5}""");
+        ResultActions overMax = outbound("tenant-001", """
+                {"productCode":"A001","quantity":1000000001}""");
+
+        // then
+        expectError(missingCode, HttpStatus.BAD_REQUEST, "INVALID_REQUEST", MISSING_MESSAGE);
+        expectError(fractional, HttpStatus.BAD_REQUEST, "INVALID_REQUEST", MALFORMED_MESSAGE);
+        expectError(overMax, HttpStatus.BAD_REQUEST, "INVALID_QUANTITY", INVALID_QUANTITY_MESSAGE);
         assertThat(db.inventoryQuantities("tenant-001", "A001")).containsExactly(10L);
     }
 
