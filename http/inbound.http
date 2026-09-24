@@ -1,0 +1,111 @@
+# 입고 API 실측 (F2)
+# 실행: 서버를 띄운 뒤 python3 scripts/run_http.py http/inbound.http
+# 순서 의존: 위에서 아래로. IN-A001을 만든 뒤 기존 상품 입고 · 상품명 불일치를 확인한다
+# 매번 빈 DB에서 시작한다 (docker compose down -v && docker compose up -d)
+
+@host = http://localhost:8080
+
+### [TC-2-01] 신규 상품 입고
+# @expect 200
+# @expect $.productCode == "IN-A001"
+# @expect $.productName == "Apple"
+# @expect $.quantity == 10
+# @db SELECT i.quantity FROM inventory i JOIN product p ON p.id = i.product_id JOIN tenant t ON t.id = p.tenant_id WHERE t.code = 'tenant-001' AND p.product_code = 'IN-A001' => 10
+POST {{host}}/api/v1/inventory/inbound
+X-Tenant-Id: tenant-001
+Content-Type: application/json
+
+{ "productCode": "IN-A001", "productName": "Apple", "quantity": 10 }
+
+### [TC-2-02] 기존 상품 입고
+# @expect 200
+# @expect $.quantity == 40
+# @db SELECT i.quantity FROM inventory i JOIN product p ON p.id = i.product_id JOIN tenant t ON t.id = p.tenant_id WHERE t.code = 'tenant-001' AND p.product_code = 'IN-A001' => 40
+# @db SELECT COUNT(*) FROM product p JOIN tenant t ON t.id = p.tenant_id WHERE t.code = 'tenant-001' AND p.product_code = 'IN-A001' => 1
+POST {{host}}/api/v1/inventory/inbound
+X-Tenant-Id: tenant-001
+Content-Type: application/json
+
+{ "productCode": "IN-A001", "productName": "Apple", "quantity": 30 }
+
+### [TC-2-03] 다른 업체의 같은 상품코드로 입고하면 그 업체의 신규 상품이 된다
+# @expect 200
+# @expect $.productName == "Samsung"
+# @expect $.quantity == 5
+# @db SELECT i.quantity FROM inventory i JOIN product p ON p.id = i.product_id JOIN tenant t ON t.id = p.tenant_id WHERE t.code = 'tenant-002' AND p.product_code = 'IN-A001' => 5
+# @db SELECT i.quantity FROM inventory i JOIN product p ON p.id = i.product_id JOIN tenant t ON t.id = p.tenant_id WHERE t.code = 'tenant-001' AND p.product_code = 'IN-A001' => 40
+POST {{host}}/api/v1/inventory/inbound
+X-Tenant-Id: tenant-002
+Content-Type: application/json
+
+{ "productCode": "IN-A001", "productName": "Samsung", "quantity": 5 }
+
+### [TC-2-04] 상품명 불일치
+# @expect 409
+# @expect $.code == "PRODUCT_NAME_MISMATCH"
+# @db SELECT i.quantity FROM inventory i JOIN product p ON p.id = i.product_id JOIN tenant t ON t.id = p.tenant_id WHERE t.code = 'tenant-001' AND p.product_code = 'IN-A001' => 40
+# @db SELECT p.name FROM product p JOIN tenant t ON t.id = p.tenant_id WHERE t.code = 'tenant-001' AND p.product_code = 'IN-A001' => Apple
+POST {{host}}/api/v1/inventory/inbound
+X-Tenant-Id: tenant-001
+Content-Type: application/json
+
+{ "productCode": "IN-A001", "productName": "Samsung", "quantity": 5 }
+
+### [TC-2-06] 수량 0
+# @expect 400
+# @expect $.code == "INVALID_QUANTITY"
+# @db SELECT COUNT(*) FROM product WHERE product_code = 'IN-Q0' => 0
+POST {{host}}/api/v1/inventory/inbound
+X-Tenant-Id: tenant-001
+Content-Type: application/json
+
+{ "productCode": "IN-Q0", "productName": "Apple", "quantity": 0 }
+
+### [TC-2-06] 수량 상한 초과
+# @expect 400
+# @expect $.code == "INVALID_QUANTITY"
+# @db SELECT COUNT(*) FROM product WHERE product_code = 'IN-QMAX' => 0
+POST {{host}}/api/v1/inventory/inbound
+X-Tenant-Id: tenant-001
+Content-Type: application/json
+
+{ "productCode": "IN-QMAX", "productName": "Apple", "quantity": 1000000001 }
+
+### [TC-2-07] 필수값 누락 (productCode)
+# @expect 400
+# @expect $.code == "INVALID_REQUEST"
+# @expect $.message == "필수 요청 정보가 누락되었습니다."
+POST {{host}}/api/v1/inventory/inbound
+X-Tenant-Id: tenant-001
+Content-Type: application/json
+
+{ "productName": "Apple", "quantity": 10 }
+
+### [TC-2-08] 정수가 아닌 수량
+# @expect 400
+# @expect $.code == "INVALID_REQUEST"
+# @expect $.message == "요청 형식이 올바르지 않습니다."
+# @db SELECT COUNT(*) FROM product WHERE product_code = 'IN-FLOAT' => 0
+POST {{host}}/api/v1/inventory/inbound
+X-Tenant-Id: tenant-001
+Content-Type: application/json
+
+{ "productCode": "IN-FLOAT", "productName": "Apple", "quantity": 1.5 }
+
+### [TC-2-08] 헤더 없음 + 깨진 JSON이면 업체 확인이 먼저다
+# @expect 400
+# @expect $.code == "INVALID_TENANT"
+POST {{host}}/api/v1/inventory/inbound
+Content-Type: application/json
+
+{ "productCode": "IN-BROKEN", "productName": "Apple", "quantity": 10
+
+### [TC-1-02] 등록되지 않은 업체
+# @expect 400
+# @expect $.code == "INVALID_TENANT"
+# @db SELECT COUNT(*) FROM product WHERE product_code = 'IN-T999' => 0
+POST {{host}}/api/v1/inventory/inbound
+X-Tenant-Id: tenant-999
+Content-Type: application/json
+
+{ "productCode": "IN-T999", "productName": "Apple", "quantity": 10 }
