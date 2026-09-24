@@ -8,7 +8,7 @@
 > - TC: [05](design/05-test-cases.md)
 >
 
-**현재:** F1 / T1-4
+**현재:** F1 / T1-5
 
 ## 규칙
 
@@ -57,7 +57,7 @@
 - [x] T1-1 `chore: 사용하지 않는 공통 코드 제거` — BaseTimeEntity · DateRules · PageLimits와 테스트 · JpaConfig(@EnableJpaAuditing)
 - [x] T1-2 `feat: 스키마 DDL 및 업체 seed 추가` — schema.sql(IF NOT EXISTS) · data.sql(ON CONFLICT) · ddl-auto validate · defer false · 프로파일의 ddl-auto 덮어쓰기 제거
 - [x] T1-3 `feat: 에러 응답을 API 명세에 맞게 정비` — code 필드 · INVALID_REQUEST · 재고 에러 코드 · 검증/역직렬화 매핑 · Jackson 강제 변환 끔 · TransactionRunner 주석(이 과제의 입출고 흐름에는 쓰지 않음) · GlobalExceptionHandlerTest를 code · INVALID_REQUEST · 04 메시지로 갱신 · ErrorCode · ErrorResponse · GlobalExceptionHandler Javadoc 갱신
-- [ ] T1-4 `feat: 업체 엔티티 및 업체 헤더 해석 구현` — Tenant 엔티티 · TenantRepository(인터페이스 · Impl · JpaRepository) · Tenant ApplicationService · HandlerInterceptor
+- [x] T1-4 `feat: 업체 엔티티 및 업체 헤더 해석 구현` — Tenant 엔티티 · TenantRepository(인터페이스 · Impl · JpaRepository) · Tenant ApplicationService · HandlerInterceptor
 - [ ] T1-5 `test: 업체 헤더 실패 케이스` — TC-1-01 ~ TC-1-02 (테스트 전용 엔드포인트)
 - [ ] T1-6 `test: DB 제약 조건 검증` — TC-1-03 ~ TC-1-04
 - [ ] T1-7 `docs: F1 작업 로그`
