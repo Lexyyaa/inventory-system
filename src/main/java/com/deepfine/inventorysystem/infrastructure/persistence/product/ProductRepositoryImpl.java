@@ -4,6 +4,7 @@ import com.deepfine.inventorysystem.domain.exception.ErrorCode;
 import com.deepfine.inventorysystem.domain.product.Product;
 import com.deepfine.inventorysystem.domain.product.ProductRepository;
 import com.deepfine.inventorysystem.domain.product.exception.ProductException;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -27,5 +28,10 @@ public class ProductRepositoryImpl implements ProductRepository {
         return productJpaRepository
                 .findByTenantIdAndProductCode(tenantId, productCode)
                 .orElseThrow(() -> new ProductException(ErrorCode.PRODUCT_NOT_FOUND));
+    }
+
+    @Override
+    public Optional<Product> findByTenantIdAndProductCode(Long tenantId, String productCode) {
+        return productJpaRepository.findByTenantIdAndProductCode(tenantId, productCode);
     }
 }

@@ -4,6 +4,7 @@ import static com.deepfine.inventorysystem.presentation.interceptor.TenantInterc
 
 import com.deepfine.inventorysystem.application.inventory.InventoryApplicationService;
 import com.deepfine.inventorysystem.application.inventory.InventoryCommand;
+import com.deepfine.inventorysystem.application.inventory.InventoryInfo;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -27,8 +28,8 @@ public class InventoryController implements InventoryApiDocs {
     @PostMapping("/inbound")
     public InventoryResponse.Inbound inbound(
             @RequestAttribute(TENANT_ID) Long tenantId, @RequestBody @Valid InventoryRequest.Inbound request) {
-        return InventoryResponse.Inbound.from(inventoryApplicationService.inbound(
-                tenantId,
-                InventoryCommand.Inbound.of(request.productCode(), request.productName(), request.quantity())));
+        InventoryCommand.Inbound command = request.toCommand(tenantId);
+        InventoryInfo.Inbound result = inventoryApplicationService.inbound(command);
+        return InventoryResponse.Inbound.from(result);
     }
 }

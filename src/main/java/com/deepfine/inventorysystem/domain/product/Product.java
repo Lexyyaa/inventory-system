@@ -10,7 +10,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import java.time.OffsetDateTime;
-import java.util.Objects;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -49,9 +48,9 @@ public class Product {
     private OffsetDateTime createdAt;
 
     private Product(Long tenantId, String productCode, String name) {
-        this.tenantId = Objects.requireNonNull(tenantId, "tenantId");
-        this.productCode = Objects.requireNonNull(productCode, "productCode");
-        this.name = Objects.requireNonNull(name, "name");
+        this.tenantId = tenantId;
+        this.productCode = productCode;
+        this.name = name;
     }
 
     /**

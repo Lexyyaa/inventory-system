@@ -1,7 +1,5 @@
 package com.deepfine.inventorysystem.domain.inventory;
 
-import com.deepfine.inventorysystem.domain.exception.ErrorCode;
-import com.deepfine.inventorysystem.domain.inventory.exception.InventoryException;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -24,8 +22,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Inventory {
 
-    private static final long MIN_QUANTITY = 1;
-
     @Id
     @Column(name = "product_id", nullable = false)
     private Long productId;
@@ -35,14 +31,4 @@ public class Inventory {
 
     @Column(name = "updated_at", nullable = false, insertable = false, updatable = false)
     private OffsetDateTime updatedAt;
-
-    /**
-     * 입고 수량이 1 이상 상한 이하인지 확인한다. 벗어나면 INVALID_QUANTITY다.
-     * 상한은 설정값이라 호출하는 쪽이 넘긴다.
-     */
-    public static void validateInboundQuantity(long quantity, long maxQuantity) {
-        if (quantity < MIN_QUANTITY || quantity > maxQuantity) {
-            throw new InventoryException(ErrorCode.INVALID_QUANTITY);
-        }
-    }
 }

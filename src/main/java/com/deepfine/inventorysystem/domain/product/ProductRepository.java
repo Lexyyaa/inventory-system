@@ -1,5 +1,7 @@
 package com.deepfine.inventorysystem.domain.product;
 
+import java.util.Optional;
+
 public interface ProductRepository {
 
     /**
@@ -11,4 +13,6 @@ public interface ProductRepository {
 
     /** 업체와 상품코드로 상품을 찾는다. 없으면 PRODUCT_NOT_FOUND. */
     Product getByTenantIdAndProductCode(Long tenantId, String productCode);
+
+    Optional<Product> findByTenantIdAndProductCode(Long tenantId, String productCode);
 }

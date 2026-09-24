@@ -1,5 +1,6 @@
 package com.deepfine.inventorysystem.presentation.controller.inventory;
 
+import com.deepfine.inventorysystem.application.inventory.InventoryCommand;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -45,5 +46,10 @@ public final class InventoryRequest {
                     example = "10",
                     requiredMode = Schema.RequiredMode.REQUIRED)
             @NotNull
-            Long quantity) {}
+            Long quantity) {
+
+        public InventoryCommand.Inbound toCommand(Long tenantId) {
+            return new InventoryCommand.Inbound(tenantId, productCode, productName, quantity);
+        }
+    }
 }
