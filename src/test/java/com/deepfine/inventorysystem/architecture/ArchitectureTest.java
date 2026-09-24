@@ -26,8 +26,7 @@ class ArchitectureTest {
     private static final String SUPPORT = "..support..";
 
     // presentation → application → domain ← infrastructure
-    // presentation(Request/Response)은 domain을 모른다. 변환은 application의 Command/Info가 맡는다
-    // MQ 리스너·스케줄러 같은 진입점도 application을 호출하므로 presentation에 둔다
+    // support는 층 검사에서 뺀다. 어느 층과도 참조할 수 있다
     @ArchTest
     static final ArchRule 레이어_의존_방향 = layeredArchitecture()
             .consideringOnlyDependenciesInLayers()
@@ -40,19 +39,14 @@ class ArchitectureTest {
             .definedBy(DOMAIN)
             .layer("Infrastructure")
             .definedBy(INFRASTRUCTURE)
-            .layer("Support")
-            .definedBy(SUPPORT)
             .whereLayer("Presentation")
             .mayNotBeAccessedByAnyLayer()
             .whereLayer("Application")
             .mayOnlyBeAccessedByLayers("Presentation")
             .whereLayer("Domain")
-            .mayOnlyBeAccessedByLayers("Application", "Infrastructure", "Support")
+            .mayOnlyBeAccessedByLayers("Application", "Infrastructure")
             .whereLayer("Infrastructure")
-            .mayNotBeAccessedByAnyLayer()
-            // domain은 properties·config를 직접 받지 않는다. 정책값은 application이 읽어 인자로 넘긴다
-            .whereLayer("Support")
-            .mayOnlyBeAccessedByLayers("Presentation", "Application", "Infrastructure");
+            .mayNotBeAccessedByAnyLayer();
 
     @ArchTest
     static final ArchRule 도메인은_웹_계층을_모른다 = noClasses()

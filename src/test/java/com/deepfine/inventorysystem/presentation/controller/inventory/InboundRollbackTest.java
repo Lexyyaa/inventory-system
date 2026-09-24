@@ -1,6 +1,6 @@
-package com.deepfine.inventorysystem.presentation.inventory;
+package com.deepfine.inventorysystem.presentation.controller.inventory;
 
-import static com.deepfine.inventorysystem.presentation.tenant.TenantInterceptor.TENANT_HEADER;
+import static com.deepfine.inventorysystem.presentation.interceptor.TenantInterceptor.TENANT_HEADER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;

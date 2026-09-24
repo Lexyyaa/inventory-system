@@ -1,6 +1,6 @@
-package com.deepfine.inventorysystem.presentation.inventory;
+package com.deepfine.inventorysystem.presentation.controller.inventory;
 
-import com.deepfine.inventorysystem.presentation.tenant.TenantInterceptor;
+import com.deepfine.inventorysystem.presentation.interceptor.TenantInterceptor;
 import com.deepfine.inventorysystem.support.exception.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

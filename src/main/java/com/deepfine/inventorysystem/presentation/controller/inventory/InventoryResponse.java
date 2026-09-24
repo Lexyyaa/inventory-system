@@ -1,4 +1,4 @@
-package com.deepfine.inventorysystem.presentation.inventory;
+package com.deepfine.inventorysystem.presentation.controller.inventory;
 
 import com.deepfine.inventorysystem.application.inventory.InventoryInfo;
 import io.swagger.v3.oas.annotations.media.Schema;

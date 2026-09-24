@@ -1,4 +1,4 @@
-package com.deepfine.inventorysystem.presentation.inventory;
+package com.deepfine.inventorysystem.presentation.controller.inventory;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
