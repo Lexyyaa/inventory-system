@@ -1,7 +1,7 @@
 package com.deepfine.inventorysystem.application.inventory;
 
 import com.deepfine.inventorysystem.domain.inventory.InventoryService;
-import com.deepfine.inventorysystem.domain.inventory.InventorySnapshot;
+import com.deepfine.inventorysystem.domain.inventory.InventoryState;
 import com.deepfine.inventorysystem.domain.product.Product;
 import com.deepfine.inventorysystem.domain.product.ProductService;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +24,7 @@ public class InventoryApplicationService {
     public InventoryInfo.Inbound inbound(InventoryCommand.Inbound command) {
         inventoryService.validateInboundQuantity(command.quantity());
         Product product = productService.getOrCreate(command.tenantId(), command.productCode(), command.productName());
-        InventorySnapshot changed = inventoryService.increase(product.getId(), command.quantity());
+        InventoryState changed = inventoryService.increase(product.getId(), command.quantity());
         return InventoryInfo.Inbound.of(product, changed);
     }
 }

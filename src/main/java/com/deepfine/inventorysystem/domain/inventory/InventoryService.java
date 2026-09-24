@@ -21,7 +21,7 @@ public class InventoryService {
         }
     }
 
-    public InventorySnapshot increase(Long productId, long quantity) {
+    public InventoryState increase(Long productId, long quantity) {
         return inventoryRepository.increase(productId, quantity);
     }
 }

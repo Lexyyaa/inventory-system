@@ -3,11 +3,14 @@ package com.deepfine.inventorysystem.presentation.controller.inventory;
 import com.deepfine.inventorysystem.application.inventory.InventoryInfo;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class InventoryResponse {
+
+    private static final ZoneId RESPONSE_ZONE = ZoneId.of("Asia/Seoul");
 
     /** 입고 응답 (04 §3). 내부 식별자는 담지 않는다. */
     @Schema(name = "InboundResponse", description = "입고 결과")
@@ -24,7 +27,11 @@ public final class InventoryResponse {
             OffsetDateTime updatedAt) {
 
         public static Inbound from(InventoryInfo.Inbound info) {
-            return new Inbound(info.productCode(), info.productName(), info.quantity(), info.updatedAt());
+            return new Inbound(
+                    info.productCode(),
+                    info.productName(),
+                    info.quantity(),
+                    info.updatedAt().atZone(RESPONSE_ZONE).toOffsetDateTime());
         }
     }
 }
