@@ -1,5 +1,6 @@
 package com.deepfine.inventorysystem.domain.product;
 
+import com.deepfine.inventorysystem.domain.common.BaseTimeEntity;
 import com.deepfine.inventorysystem.domain.exception.ErrorCode;
 import com.deepfine.inventorysystem.domain.product.exception.ProductException;
 import jakarta.persistence.Column;
@@ -9,7 +10,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
-import java.time.OffsetDateTime;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -29,7 +29,7 @@ import lombok.NoArgsConstructor;
                         columnNames = {"tenant_id", "product_code"}))
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Product {
+public class Product extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -43,9 +43,6 @@ public class Product {
 
     @Column(name = "name", nullable = false)
     private String name;
-
-    @Column(name = "created_at", nullable = false, insertable = false, updatable = false)
-    private OffsetDateTime createdAt;
 
     private Product(Long tenantId, String productCode, String name) {
         this.tenantId = tenantId;

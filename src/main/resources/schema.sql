@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS tenant (
     code       VARCHAR(100) NOT NULL,
     name       VARCHAR(255) NOT NULL,
     created_at TIMESTAMPTZ  NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ  NOT NULL DEFAULT now(),
     CONSTRAINT pk_tenant PRIMARY KEY (id),
     CONSTRAINT uk_tenant_code UNIQUE (code)
 );
@@ -17,6 +18,7 @@ CREATE TABLE IF NOT EXISTS product (
     product_code VARCHAR(100) NOT NULL,
     name         VARCHAR(255) NOT NULL,
     created_at   TIMESTAMPTZ  NOT NULL DEFAULT now(),
+    updated_at   TIMESTAMPTZ  NOT NULL DEFAULT now(),
     CONSTRAINT pk_product PRIMARY KEY (id),
     CONSTRAINT fk_product_tenant FOREIGN KEY (tenant_id) REFERENCES tenant (id),
     CONSTRAINT uk_product_tenant_code UNIQUE (tenant_id, product_code)
@@ -25,6 +27,7 @@ CREATE TABLE IF NOT EXISTS product (
 CREATE TABLE IF NOT EXISTS inventory (
     product_id BIGINT      NOT NULL,
     quantity   BIGINT      NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     CONSTRAINT pk_inventory PRIMARY KEY (product_id),
     CONSTRAINT fk_inventory_product FOREIGN KEY (product_id) REFERENCES product (id),

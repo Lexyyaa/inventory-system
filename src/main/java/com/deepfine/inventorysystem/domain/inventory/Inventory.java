@@ -1,10 +1,10 @@
 package com.deepfine.inventorysystem.domain.inventory;
 
+import com.deepfine.inventorysystem.domain.common.BaseTimeEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import java.time.OffsetDateTime;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -20,7 +20,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "inventory")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Inventory {
+public class Inventory extends BaseTimeEntity {
 
     @Id
     @Column(name = "product_id", nullable = false)
@@ -28,7 +28,4 @@ public class Inventory {
 
     @Column(name = "quantity", nullable = false)
     private Long quantity;
-
-    @Column(name = "updated_at", nullable = false, insertable = false, updatable = false)
-    private OffsetDateTime updatedAt;
 }
