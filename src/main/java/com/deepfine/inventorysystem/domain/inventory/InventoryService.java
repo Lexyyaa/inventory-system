@@ -1,8 +1,5 @@
 package com.deepfine.inventorysystem.domain.inventory;
 
-import com.deepfine.inventorysystem.domain.exception.ErrorCode;
-import com.deepfine.inventorysystem.domain.inventory.exception.InventoryException;
-import com.deepfine.inventorysystem.support.properties.InventoryProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -10,17 +7,13 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class InventoryService {
 
-    private static final long MIN_QUANTITY = 1;
-
     private final InventoryRepository inventoryRepository;
-    private final InventoryProperties inventoryProperties;
 
-    public void validateInboundQuantity(long quantity) {
-        if (quantity < MIN_QUANTITY || quantity > inventoryProperties.maxQuantity()) {
-            throw new InventoryException(ErrorCode.INVALID_QUANTITY);
-        }
-    }
-
+    /**
+     * 재고 증가 <br>
+     * - 재고 행이 없으면 입고 수량으로 만든다 <br>
+     * - 이 요청이 반영된 직후의 수량과 변경 시각을 돌려준다 <br>
+     */
     public InventoryState increase(Long productId, long quantity) {
         return inventoryRepository.increase(productId, quantity);
     }

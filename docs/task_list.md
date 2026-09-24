@@ -85,6 +85,7 @@
 - [x] T2-15 `docs: 코드 리뷰 합의 규칙 반영` — CLAUDE.md 3개 · 체크리스트 · 03 시각 컬럼
 - [x] T2-16 `docs: F2 코드 리뷰 작업 로그`
 - [x] T2-17 `refactor: 업체 확인을 도메인 서비스로 분리` — TenantService
+- [x] T2-18 `refactor: 수량 검사를 재고 엔티티로 옮김` — repository가 필요 없는 규칙은 엔티티 · 주석 자리 규칙
 
 ## F3. 조회 `feature/query` — TC-3-01 ~ TC-3-04
 

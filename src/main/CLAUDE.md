@@ -35,7 +35,10 @@ com.deepfine.inventorysystem
   - 불변식 검증을 그 안에서 끝낸다
 - `@Setter` 금지
   - 상태 변경은 의도가 드러나는 메서드로 한다
-- 여러 엔티티를 넘나드는 로직과 repository를 부르는 절차는 도메인 서비스(`domain/{domain}/{Domain}Service`)로 뺀다
+- repository가 필요 없는 규칙은 엔티티 메서드로 둔다 (예: `Inventory.validateInboundQuantity`)
+  - 인스턴스가 아직 없을 수 있는 검사는 정적 메서드로 둔다
+  - 엔티티 메서드마다 도메인 단위 테스트를 둔다
+- 여러 엔티티를 넘나드는 로직과 repository를 부르는 절차만 도메인 서비스(`domain/{domain}/{Domain}Service`)로 뺀다
   - 도메인 서비스는 자기 도메인의 repository와 엔티티 규칙으로 절차를 묶는다
   - 도메인 서비스에는 `@Transactional`을 두지 않는다
 - 규칙이 실제로 여러 갈래일 때만 다형성(정책 인터페이스)을 쓴다
@@ -155,7 +158,7 @@ com.deepfine.inventorysystem
 - `GlobalExceptionHandler`가 `BusinessException`을 한 곳에서 응답으로 바꾼다
   - 5xx 코드는 error 로그, 4xx는 info 로그로 남는다
   - Bean Validation · 역직렬화 실패는 모두 `INVALID_REQUEST`로 바꾼다
-  - `INVALID_QUANTITY`(1 미만 · 상한 초과)는 `InventoryService`가 properties 상한을 읽어 검사한다
+  - `INVALID_QUANTITY`(1 미만 · 상한 초과)는 ApplicationService가 properties 상한을 읽어 `Inventory.validateInboundQuantity`에 넘겨 검사한다
     - ApplicationService의 맨 앞, 상품 INSERT · 조회보다 먼저 부른다 (04 §2 판정 순서). Request의 quantity에는 `@NotNull`만 둔다
 - 설계상 일어날 수 없는 상황(생성을 시도한 상품을 다시 읽지 못함 등)은 404가 아니라 500이다
 - 에러 응답 본문은 `{ "code", "message" }`다 (`04` §2)
@@ -185,7 +188,7 @@ com.deepfine.inventorysystem
   - 예: 수량 상한
   - `application.yml`에 둔다
   - `support/properties`의 `@ConfigurationProperties`로 둔다
-  - 도메인 서비스가 직접 주입받아 쓴다
+  - ApplicationService가 읽어 엔티티 메서드 인자로 넘긴다
 - 스키마는 `src/main/resources/schema.sql`
   - `CREATE TABLE IF NOT EXISTS`
   - `ddl-auto: validate`, `defer-datasource-initialization: false`
@@ -209,6 +212,10 @@ com.deepfine.inventorysystem
   - 변명하듯 긴 이유, 비즈니스 규칙 설명 (설계 문서가 원본이다)
   - `{@code}` · `{@link}` · `<p>` 같은 Javadoc 태그 (`<br>`만 쓴다)
 - Request · Response 필드의 `@Schema` 설명은 Swagger 문서라 남기되 짧게 쓴다
+- 주석을 두는 자리
+  - 동작 설명은 도메인 서비스 메서드에 둔다
+  - 도메인 repository 인터페이스에는 주석을 두지 않는다
+  - SQL을 그렇게 쓴 이유는 JpaRepository 쿼리 위에만 둔다
 
 ```java
 /**
