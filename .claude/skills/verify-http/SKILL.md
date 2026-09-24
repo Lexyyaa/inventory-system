@@ -26,25 +26,28 @@ disable-model-invocation: true
 ```http
 @host = http://localhost:8080
 
-### [TC-2-01] 정상 주문 생성
-# @expect 201
-# @expect $.status == "PLACED"
-# @db SELECT COUNT(*) FROM orders WHERE idempotency_key = '1111...' => 1
-POST {{host}}/orders
+### [TC-2-01] 신규 상품 입고
+# @expect 200
+# @expect $.quantity == 10
+# @db SELECT i.quantity FROM inventory i JOIN product p ON p.id = i.product_id JOIN tenant t ON t.id = p.tenant_id WHERE t.code = 'tenant-001' AND p.product_code = 'IN-A001' => 10
+POST {{host}}/api/v1/inventory/inbound
+X-Tenant-Id: tenant-001
 Content-Type: application/json
-Idempotency-Key: 11111111-1111-1111-1111-111111111111
 
-{ "productId": 1, "quantity": 2 }
+{ "productCode": "IN-A001", "productName": "Apple", "quantity": 10 }
 
-### [TC-2-05] 종결된 주문 취소 시 409
-# @uses orderId = [TC-2-01].$.id
+### [TC-2-04] 상품명 불일치 입고
 # @expect 409
-# @expect $.errorCode == "INVALID_STATUS_TRANSITION"
-POST {{host}}/orders/{{orderId}}/cancel
+# @expect $.code == "PRODUCT_NAME_MISMATCH"
+POST {{host}}/api/v1/inventory/inbound
+X-Tenant-Id: tenant-001
+Content-Type: application/json
+
+{ "productCode": "IN-A001", "productName": "Samsung", "quantity": 5 }
 ```
 
 - `# @expect {상태코드}` — 필수
-- `# @expect $.errorCode == "..."` — 에러 케이스는 필수
+- `# @expect $.code == "..."` — 에러 케이스는 필수 (04 §2 공통 오류 응답)
   - 같은 400끼리 거짓 통과가 나지 않게
 - `# @expect $.필드 == 값` — 부분 성공 · 생성 API는 필수
   - 상태코드만 보면 거짓 통과가 난다
@@ -52,7 +55,9 @@ POST {{host}}/orders/{{orderId}}/cancel
 - 앞 요청의 응답 값(id 등)을 쓰는 요청은 의존을 적는다
   - 선언: `# @uses {변수} = [TC-x-yy].$.경로`
   - 사용: 경로 · 헤더 · 본문에 `{{변수}}`
-  - 같은 파일의 앞 요청, 또는 앞 파일(F 순서)의 요청만 참조한다
+  - 같은 파일의 앞 요청만 참조한다 (run_http.py는 파일마다 응답을 새로 기억한다)
+  - 파일에 필요한 상품은 그 파일 안의 준비 입고로 만든다
+  - 상품코드에 파일별 접두어(inbound `IN-`, query `Q-`, outbound `OUT-`)를 붙여 전체 실행에서도 값이 겹치지 않게 한다
 
 ## 순서
 
@@ -63,8 +68,8 @@ POST {{host}}/orders/{{orderId}}/cancel
 2. **DB 초기화 · 서버 기동**
    - `docker compose down -v && docker compose up -d`
      - 매번 빈 DB에서 시작한다
-     - 이전 실행의 데이터(멱등 키 · UNIQUE 값)가 남으면 거짓 불일치가 난다
-     - `ddl-auto: update`가 반영 못 하는 제약 변경도 이렇게 반영된다
+     - 이전 실행의 데이터(상품 · 누적 재고)가 남으면 거짓 불일치가 난다
+     - `schema.sql` 변경도 이렇게 반영된다 (`IF NOT EXISTS`라 볼륨을 지워야 한다)
    - 아래 명령이 성공할 때까지 대기한다
      - `docker exec inventory-system-postgres psql -h localhost -U app -d inventory-system -c "SELECT 1"`
      - `-h localhost`로 TCP 접속한다. 초기화 중인 임시 서버는 소켓으로만 받으므로 초기화가 끝나야 성공한다
@@ -94,11 +99,11 @@ POST {{host}}/orders/{{orderId}}/cancel
 
 | TC | 요청 | 상태 | 본문 | DB | 결과 |
 |---|---|---|---|---|---|
-| TC-2-01 | POST /orders | 201 ✅ | status ✅ | 1 ✅ | ✅ |
-| TC-2-05 | POST /orders | 500 ❌ (기대 400) | — | — | ❌ |
+| TC-2-01 | POST /api/v1/inventory/inbound | 200 ✅ | quantity ✅ | 10 ✅ | ✅ |
+| TC-2-06 | POST /api/v1/inventory/inbound | 500 ❌ (기대 400) | — | — | ❌ |
 
 ## 불일치
-- [TC-2-05] 기대 400 INVALID_INPUT / 실제 500 — 서버 로그: (핵심 줄)
+- [TC-2-06] 기대 400 INVALID_QUANTITY / 실제 500 — 서버 로그: (핵심 줄)
   - 추정 원인: …
 
 ## 기대값이 없는 요청

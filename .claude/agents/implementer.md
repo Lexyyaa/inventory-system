@@ -27,9 +27,11 @@ tools: Read, Write, Edit, Grep, Glob, Bash
 1. 구현한다
    - 규칙은 `src/main/CLAUDE.md`를 따른다
    - 테스트는 `src/test/CLAUDE.md`를 따른다
-2. `02-requirements.md`의 TC 표에 있는 케이스를 그대로 테스트로 옮긴다
-   - `@DisplayName("[TC-x-yy] ...")` 형식을 지킨다
-   - TC 표에 없는 케이스가 필요하면 만들되, 보고에 "TC 추가 제안"으로 남긴다
+2. `docs/design/05-test-cases.md`의 TC를 그대로 테스트로 옮긴다
+   - `@DisplayName`은 05에 적힌 문장을 그대로 쓴다
+   - 05의 given · when · then을 테스트 본문의 `// given` `// when` `// then`으로 옮긴다
+   - 05의 "테스트" 줄(도메인 단위 · 통합 (API) · 통합 (저장소))대로 테스트 종류를 고른다
+   - 05에 없는 케이스가 필요하면 만들되, 보고에 "TC 추가 제안"으로 남긴다
 3. `.claude/checklists/implementation.md`로 변경분을 확인한다
 4. 게이트를 통과시키고 커밋한다
    - 게이트 · 커밋 메시지 · task_list 갱신 규칙: 루트 `CLAUDE.md` "작업 흐름"
@@ -42,8 +44,7 @@ tools: Read, Write, Edit, Grep, Glob, Bash
 
 ## seed를 구현할 때
 
-- `data.sql`은 `03` §9와 `00` 기초 데이터 표를 한 행씩 대조하며 쓴다
-- 끝나면 `03` §9 표의 대조 완료 칸을 체크한다
+- `data.sql`은 `03` §2의 Tenant seed를 `INSERT ... ON CONFLICT DO NOTHING`으로 쓴다
 
 ## 멈추고 돌아올 때
 
@@ -54,6 +55,8 @@ tools: Read, Write, Edit, Grep, Glob, Bash
   - 인덱스·nullable·트랜잭션 경계·락 방식·에러 코드·응답 필드 등
 - 설계 문서끼리, 또는 문서와 기존 코드가 어긋난다
 - 게이트가 같은 원인으로 3번 넘게 실패한다
+  - 단, task_list 작업 줄이 고치라고 적은 어긋남(예: F1 T1-1~T1-3)은 멈추지 않고 고친다
+  - 설계 문서에 맞추려고 기존 테스트의 필드명 · 코드 · 메시지 단언을 바꾸는 것은 테스트 약화가 아니다
 
 보고에는 선택지 2~3개와 각각의 트레이드오프를 한 줄씩 적는다.
 
@@ -61,7 +64,7 @@ tools: Read, Write, Edit, Grep, Glob, Bash
 
 - 규칙대로 적용한다
 - 보고의 "설계에 없어서 정한 것"에 어느 상시 결정을 적용했는지 적는다
-- 예: 입력 범위, 정책 수치의 위치, 불필요 필드 거부, 애그리거트 간 FK
+- 예: 입력 범위(DB 컬럼 범위), 정책 수치의 위치(application.yml), 정의되지 않은 필드 무시, 엔티티 간 식별자(Long) 참조 (DB FK는 03 §7대로 둔다)
 
 ## 하지 말 것
 

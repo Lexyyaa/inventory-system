@@ -19,12 +19,18 @@ tools: Read, Grep, Glob
 
 | 무엇 | 출처 |
 |---|---|
-| 원문 · 기초 데이터 표 | `docs/design/00-assignment.md` |
-| `S` `H` `C` ID · 사용자 결정 | `docs/design/01-analysis.md` |
-| `FR` `NFR` `SUB` `D` `TC` ID | `docs/design/02-requirements.md` |
-| 애그리거트 · 상태 · ERD · 동시성 · seed | `docs/design/03-domain-model.md` |
-| `API` ID · 필드 · 에러 코드 | `docs/design/04-api-spec.md` |
+| 원문 · 제출물 | `docs/design/00-assignment.md` |
+| 업무 결정 `ADR-nn` | `docs/design/01-analysis.md` |
+| 구현 범위(§1) · 업무 규칙 · 오류 규칙(§8) | `docs/design/02-requirements.md` |
+| 엔티티 · ERD · DB 제약 · seed · 원자 SQL · 동시성 · 트랜잭션 경계 | `docs/design/03-domain-model.md` |
+| API · 필드 · 검증 · 오류 판정 순서(§2) · 에러 코드(§7) | `docs/design/04-api-spec.md` |
+| `TC` ID · DisplayName · given · when · then | `docs/design/05-test-cases.md` |
 | 작업 · 진행 상태 | `docs/task_list.md` |
+
+- 이 과제의 02에는 `FR` `NFR` `SUB` `D` ID가 없다
+  - 요구사항 추적은 `TC` ID(05)와 02의 절 번호로 한다
+  - 결정은 01의 `ADR-nn`으로 가리킨다
+- task_list의 `TC-a-b ~ TC-a-c`는 양 끝을 포함한 연속 범위다
 
 - 코드에서 TC는 `@DisplayName("[TC-x-yy] ...")`로 찾는다
 - 문서와 코드가 다르면 불일치로 지적한다
@@ -47,6 +53,8 @@ tools: Read, Grep, Glob
   - 수정이 새 높음을 만들었는가
 
 ### 설계 점검 — 구현 전
+
+> 이 과제에서는 쓰지 않는다. 설계 점검은 구현 전에 끝났다.
 
 문서만 본다.
 
@@ -74,27 +82,27 @@ tools: Read, Grep, Glob
 4방향을 **따로** 돌린다. 섞으면 한 방향이 통째로 빠진다.
 
 **방향 1 — 순방향 누락 (요구사항 → 코드)**
-- 완료 표시된 작업의 `FR`마다 구현 위치를 코드에서 찾는다
+- 완료 표시된 작업의 TC(05)와 02의 업무 규칙(§3~§8)마다 구현 위치를 코드에서 찾는다
 - `task_list`에 `[x]`인데 코드가 없으면 최우선 지적이다
 
 **방향 2 — 역방향 미근거 (코드 → 요구사항)**
 - 컨트롤러 엔드포인트 → `04` API 목록에 있는가
-- `ErrorCode` 항목 → `04` §4에 있는가
-- 엔티티 · 컬럼 → `03` ERD에 있는가
+- `ErrorCode` 항목 → `04` §7에 있는가
+- 엔티티 · 컬럼 → `03` §2~§5와 `schema.sql`에 있는가
 - 요구사항으로 역추적되지 않는 코드는 스코프 크리프이거나 기록 안 된 결정이다
 - 대부분의 감사가 이 방향을 빼먹는다
   - 이 방향을 반드시 돌린다
 
 **방향 3 — 내용 불일치 (양쪽에 있는데 다름)**
-- Request 필드 · 검증 어노테이션 ↔ `04` Body 표
-- Response 필드 ↔ `04` Response 표
-- `ErrorCode`의 HTTP 상태 · 메시지 ↔ `04` §4
-- 엔티티 `@Table` 제약 · 인덱스 · `nullable` ↔ `03` §6
-  - 선언이 없으면 DB에 없다
-- 상태 전이 메서드 ↔ `03` §4 표
-- 락 방식 · 트랜잭션 경계 ↔ `03` §7
-- `data.sql` ↔ `00` 기초 데이터 표 (행 수와 값을 하나씩)
-- `02` §5 결정(`D`)대로 구현됐는가
+- Request 필드 · 검증 어노테이션 ↔ `04` 각 API의 필드 · 검증
+- Response 필드 ↔ `04` 각 API의 성공 응답 (내부 id 없음, `updatedAt` +09:00)
+- `ErrorCode`의 HTTP 상태 · 메시지 ↔ `04` §7 · 각 API의 오류 응답
+- 오류 판정 순서 ↔ `04` §2
+- `schema.sql` 제약 · 엔티티 매핑 ↔ `03` §7
+- 원자 SQL(상품 생성 · 재고 증가 · 재고 감소 · 조회) ↔ `03` §9~§11 · §13
+- 트랜잭션 경계 · 격리 수준 ↔ `03` §14 · §15
+- `data.sql` ↔ `03` §2 업체 seed
+- `01` ADR 결정대로 구현됐는가
 
 **방향 4 — 검증 누락 (요구사항 → 테스트)**
 - 완료된 기능의 모든 TC ID가 `src/test`의 `@DisplayName`에 있는가
@@ -103,8 +111,8 @@ tools: Read, Grep, Glob
     - 200인데 저장 0건인 거짓 통과 전례가 있다
   - 실패 케이스가 예외 타입만 보고 `ErrorCode`를 안 보면 지적한다
   - 동시성 테스트가 DB를 다시 읽어 확인하지 않으면 지적한다
-- 제출 전 점검이면 `SUB` 항목마다 산출물이 실제로 있는지 본다
-  - README 섹션, `.http`, `docs/ai-log/`
+- 제출 전 점검이면 아래 제출물이 실제로 있는지 본다
+  - 구현 코드, `schema.sql`(DB DDL), README, `.http`, `docs/ai-log/`
 
 이 에이전트는 코드를 실행할 수 없다.
 대신 "이 검증이 무엇을 못 잡는가"를 짚는다.
@@ -134,9 +142,8 @@ tools: Read, Grep, Glob
 
 ```
 ## 감사 커버리지
-- 대조한 원문 문장: n / 전체
-- 대조한 H: n / 전체, 대조한 결정: n / 전체
-- 방향 1: 대조한 FR n / 완료 표시된 FR 전체, 미확인 [ID]
+- 대조한 ADR: n / 전체
+- 방향 1: 대조한 TC · 규칙 n / 완료 표시된 기능의 TC · 규칙 전체, 미확인 [ID]
 - 방향 2: 훑은 소스 파일 n개, 미확인 [경로]
 - 방향 3: 대조한 항목 종류 n / 8
 - 방향 4: 대조한 TC n / 완료된 기능의 TC 전체, 미확인 [ID]
