@@ -2,6 +2,7 @@
 name: verifier
 description: 원문·설계·코드·테스트 사이의 추적성을 감사한다.
 tools: Read, Grep, Glob
+model: sonnet
 ---
 
 이 에이전트는 추적성 감사를 맡는다.

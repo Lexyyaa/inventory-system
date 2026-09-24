@@ -22,6 +22,8 @@
 - [ ] "무시한다"고 정한 입력 필드에 Bean Validation이 남아 있지 않다 — 무시될 값 때문에 400
 - [ ] `Info` · `Command`에 domain Enum · VO · 엔티티를 담지 않는다 — presentation이 domain을 참조해 ArchUnit 실패 (`name()` · 원시값으로 푼다)
 - [ ] `catch (RuntimeException | Exception)`이 `BusinessException`을 삼키지 않는다 — 원래 에러 코드 대신 엉뚱한 응답
+- [ ] 컨트롤러 매핑에 `consumes` · `produces`를 두지 않는다 — Content-Type 오류가 업체 확인보다 먼저 400 `INVALID_REQUEST`가 되어 04 §2 순서가 뒤집힌다 (TC-2-08 요청 4)
+- [ ] 출고의 `INVALID_QUANTITY`는 출고 문구("출고 수량이 허용 범위를 벗어났습니다.")를 `detail`로 넘긴다 — `ErrorCode` 기본 문구가 입고 문구라 빠뜨리면 출고 응답에 "입고 수량이 …"가 나간다
 - [ ] 검사 순서가 04 §2 "오류 판정 순서"와 같다 (Tenant → 형식 → 필수값·길이 → 수량 범위 → 상품 존재 → 상품·재고 상태) — 같은 요청에 설계와 다른 에러 코드
 
 ## 날짜 · 시간

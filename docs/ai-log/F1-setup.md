@@ -154,6 +154,15 @@
 - verifier
   - 생략 (F1은 "reviewer만")
 
+### F1 마무리에서 정한 것 (사용자가 추천안 적용을 위임)
+
+- 경로 · 메서드 오류와 Tenant 확인의 순서: 현행 유지(A)
+  - 405는 Tenant 확인보다 먼저, 존재하지 않는 경로는 Tenant 확인 뒤
+  - 04 §2와 02 §8에 한 줄씩 적었다. 코드는 바꾸지 않았다
+  - 다른 선택지: `add-mappings: false`로 경로 404를 먼저 두기(Swagger UI 확인 필요), Filter로 업체 확인을 가장 먼저 두기(Filter 금지 규칙과 충돌)
+- 구현 체크리스트에 2줄 추가: 컨트롤러 `consumes` · `produces` 금지, 출고 `INVALID_QUANTITY`는 출고 문구를 `detail`로
+- verifier 에이전트 모델을 Sonnet으로 지정 (사용자 요청)
+
 ## 실행 확인
 
 - `./gradlew spotlessApply build` → 성공
