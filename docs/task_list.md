@@ -8,7 +8,7 @@
 > - TC: [05](design/05-test-cases.md)
 >
 
-**현재:** F2 / T2-2
+**현재:** F2 / T2-3
 
 ## 규칙
 
@@ -65,7 +65,7 @@
 ## F2. 입고 `feature/inbound` — TC-2-01 ~ TC-2-13
 
 - [x] T2-1 `feat: 상품·재고 엔티티 구현`
-- [ ] T2-2 `feat: 상품 생성 및 재고 증가 원자 쿼리 구현`
+- [x] T2-2 `feat: 상품 생성 및 재고 증가 원자 쿼리 구현`
 - [ ] T2-3 `feat: 입고 API 구현` — POST /api/v1/inventory/inbound · 수량 상한 설정 · ApiDocs · OpenApiConfig 제목 · 설명
 - [ ] T2-4 `test: 입고 성공·실패 케이스` — TC-2-01 ~ TC-2-08
 - [ ] T2-5 `test: 입고 엣지 케이스` — TC-2-09 ~ TC-2-10
