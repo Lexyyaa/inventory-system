@@ -146,3 +146,4 @@
     - DB 이식성: 원자 SQL이 PostgreSQL 문법(`ON CONFLICT`, `RETURNING`)이라 DB를 바꾸면 세 쿼리를 다시 써야 함
     - `X-Tenant-Id`에 제어 문자(NUL)가 오면 Tomcat이 Spring 전에 HTML 400으로 막음 (`{code, message}` 형식 아님)
     - 재고 합이 BIGINT 범위를 넘으면 500 (한 건 상한 10억이라 약 92억 번 입고해야 생김)
+    - 조회 경로의 `;` 뒤는 경로 매개변수로 무시됨 (`/inventory/A001;x` → A001 조회 200, `%3B`로 인코딩하면 404)
