@@ -124,6 +124,7 @@ class OutboundApiTest {
     void rejectsZeroAndNegativeQuantity() throws Exception {
         // given
         db.insertProduct("tenant-001", "A001", "Apple", 10);
+        OffsetDateTime updatedAtBefore = db.inventoryUpdatedAt("tenant-001", "A001");
 
         // when
         ResultActions zero = outbound("tenant-001", """
@@ -134,9 +135,9 @@ class OutboundApiTest {
         // then
         expectError(zero, HttpStatus.BAD_REQUEST, "INVALID_QUANTITY", INVALID_QUANTITY_MESSAGE);
         expectError(negative, HttpStatus.BAD_REQUEST, "INVALID_QUANTITY", INVALID_QUANTITY_MESSAGE);
-        currentStock("tenant-001", "A001")
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.quantity").value(10));
+        ResultActions stock = currentStock("tenant-001", "A001");
+        stock.andExpect(status().isOk()).andExpect(jsonPath("$.quantity").value(10));
+        assertThat(updatedAtOf(stock)).isAtSameInstantAs(updatedAtBefore);
         assertThat(db.inventoryQuantities("tenant-001", "A001")).containsExactly(10L);
     }
 

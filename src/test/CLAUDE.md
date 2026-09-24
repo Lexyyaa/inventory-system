@@ -9,9 +9,9 @@
 - `@DisplayName`은 05에 적힌 문장을 그대로 쓴다
   - 형식: `@DisplayName("[TC-x-yy] …")`
 - 테스트 클래스는 검증 대상의 이름과 패키지를 따른다
-  - application·presentation: 서비스·컨트롤러 기준
+  - application/presentation: 서비스/컨트롤러 기준
     - `InboundConcurrencyTest`, `InboundApiTest`
-- 본문은 `// given` `// when` `// then` 주석으로 나누고, 05의 given · when · then을 그대로 따른다
+- 본문은 `// given` `// when` `// then` 주석으로 나누고, 05의 given/when/then을 그대로 따른다
 - 주석은 `@DisplayName`과 `// given` `// when` `// then`만 둔다
 - 테스트 도구는 `support/` 바로 아래에 둔다
   - `support/` 하위 패키지(`support/exception` 등)에는 main `support` 코드의 테스트만 둔다
@@ -22,12 +22,12 @@
 
 | 종류 | 방식 | 위치 |
 |---|---|---|
-| 도메인 단위 | 순수 단위 테스트 (Spring · DB 없음) | `domain/**` |
+| 도메인 단위 | 순수 단위 테스트 (Spring, DB 없음) | `domain/**` |
 | 통합 (API) | `@IntegrationTest` + 주입받은 `MockMvc` | `presentation/**` |
 | 통합 (저장소) | `@IntegrationTest` + `JdbcTemplate`으로 직접 저장 | `infrastructure/**` |
 | 구조 | ArchUnit | `architecture/ArchitectureTest` |
 
-- TC-1-01·02의 테스트 전용 엔드포인트 `GET /api/v1/test/tenant`는 `src/test/java/…/presentation/interceptor` 아래 **최상위** `@RestController` 클래스로 둔다
+- TC-1-01/02의 테스트 전용 엔드포인트 `GET /api/v1/test/tenant`는 `src/test/java/…/presentation/interceptor` 아래 **최상위** `@RestController` 클래스로 둔다
   - 매핑은 `/test/tenant`만 적는다. `/api/v1`은 `WebConfig`가 presentation 패키지 컨트롤러에 붙인다
   - `src/main`에 두지 않는다
   - 테스트 클래스 안에 중첩하지 않는다 — 중첩하면 스캔에서 빠져 등록되지 않고, 인터셉터만 동작해 테스트가 거짓으로 통과한다
@@ -41,17 +41,17 @@
   - 덮어쓸 설정은 `src/test/resources/application-test.yml`에 둔다
   - main 설정을 통째로 대체하지 않는다
   - `ddl-auto`는 덮어쓰지 않는다. 테스트도 `schema.sql`을 쓴다
-- 원자 SQL · 트랜잭션 · UNIQUE · CHECK 제약은 실제 PostgreSQL이 필요하다
+- 원자 SQL, 트랜잭션, UNIQUE/CHECK 제약은 실제 PostgreSQL이 필요하다
   - H2로 대체하지 않는다
 
 ## 단언
 
 - 상태코드만 단언하지 않는다
   - 응답 본문의 핵심 필드까지 확인한다
-  - DB 상태(건수·값)까지 확인한다
+  - DB 상태(건수, 값)까지 확인한다
 - 실패 케이스는 에러 코드까지 단언한다
   - API: 응답 본문의 `code`
-  - 서비스·도메인: 예외 타입과 `ErrorCode`
+  - 서비스/도메인: 예외 타입과 `ErrorCode`
 - 롤백 케이스는 "예외가 났다"로 끝내지 않는다
   - 부분 저장이 없는지 확인한다
 - 입력 오류 케이스는 500이 아니라 4xx인지 확인한다
@@ -62,12 +62,12 @@
   - 내부 동작
     - 시작 래치로 모든 스레드를 같은 시점에 출발시킨다
     - 30초 안에 안 끝나면 실패시킨다 (데드락 의심)
-- 통합(API) 동시성은 스레드마다 MockMvc로 요청하고 `MvcResult`의 상태코드로 성공 · 실패를 센다
+- 통합(API) 동시성은 스레드마다 MockMvc로 요청하고 `MvcResult`의 상태코드로 성공/실패를 센다
   - `ConcurrencyRunner`의 `successCount`는 예외 여부만 센다
 - 결과는 DB 또는 05에 적힌 조회 API로 다시 읽어 확인한다
   - 생성 건수
   - 재고 값
-  - 성공 · 실패 건수와 판정 기준 식(최종 재고 = 초기 + Σ성공 입고 − Σ성공 출고)
+  - 성공/실패 건수와 판정 기준 식(최종 재고 = 초기 + Σ성공 입고 − Σ성공 출고)
 - 동시성 테스트는 `@Transactional` 롤백을 쓸 수 없다
   - 테스트가 만든 데이터는 직접 정리한다
 
@@ -75,9 +75,9 @@
 
 - 테스트 DB에도 `data.sql` seed(`tenant-001`, `tenant-002`)가 들어간다
   - 건수 단언은 테스트가 만든 상품코드로 필터한다
-- 테스트에 필요한 상품 · 재고는 테스트가 직접 만든다
-  - 입고 API를 거치지 않고 `support/InventoryTestDb`로 DB에 직접 넣는다 (입고가 깨져도 조회 · 출고 테스트가 같이 깨지지 않게)
-  - 각 테스트 전에 product · inventory만 비운다. seed 업체는 그대로 둔다
+- 테스트에 필요한 상품과 재고는 테스트가 직접 만든다
+  - 입고 API를 거치지 않고 `support/InventoryTestDb`로 DB에 직접 넣는다 (입고가 깨져도 조회와 출고 테스트가 같이 깨지지 않게)
+  - 각 테스트 전에 product와 inventory만 비운다. seed 업체는 그대로 둔다
 - POST 요청에는 `Content-Type: application/json`을 붙인다
 - DB 제약 테스트(데이터 제약 케이스)
   - `ON CONFLICT` 없는 INSERT로 직접 저장한다

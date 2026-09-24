@@ -1,6 +1,6 @@
 # PR 올리기 절차
 
-`/design` · `/run-feature` · `/wrap-up`의 마무리 단계가 공통으로 쓴다.
+`/design`, `/run-feature`, `/wrap-up`의 마무리 단계가 공통으로 쓴다.
 **사용자가 PR 올리기를 승인한 뒤에만** 실행한다.
 
 ## 원칙
@@ -36,7 +36,7 @@ GitHub에서 확인 후 머지해 주세요 (Merge commit 권장).
 
 ## 다음 스킬이 시작할 때 (이전 PR 확인)
 
-`/run-feature` · `/wrap-up`의 0단계에서 실행한다.
+`/run-feature`와 `/wrap-up`의 0단계에서 실행한다.
 
 1. 이전 브랜치를 정한다
    - task_list에서 `[x]`가 있는 직전 F 블록의 `feature/{name}`

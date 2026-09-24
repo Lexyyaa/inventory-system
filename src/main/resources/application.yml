@@ -23,8 +23,14 @@ spring:
     # 수량은 JSON 정수만 받는다. 소수(1.5) → 정수, 문자열("10") → 숫자 강제 변환을 끈다 (실패하면 400 INVALID_REQUEST)
     deserialization:
       accept-float-as-int: false
+      # 정의되지 않은 필드는 무시한다
+      fail-on-unknown-properties: false
     mapper:
       allow-coercion-of-scalars: false
+  # 파일 업로드가 없어 multipart 해석을 끈다. multipart 요청도 업체 확인 뒤 400 INVALID_REQUEST(형식)가 된다
+  servlet:
+    multipart:
+      enabled: false
   sql:
     init:
       # schema.sql(CREATE TABLE IF NOT EXISTS)과 data.sql(INSERT ... ON CONFLICT DO NOTHING)을 기동마다 실행한다
@@ -32,7 +38,7 @@ spring:
       encoding: UTF-8
 
 inventory:
-  # 입고 · 출고 요청 한 건의 수량 상한. 1 미만이거나 이 값을 넘으면 400 INVALID_QUANTITY
+  # 입고/출고 요청 한 건의 수량 상한. 1 미만이거나 이 값을 넘으면 400 INVALID_QUANTITY
   max-quantity: 1000000000
 
 server:

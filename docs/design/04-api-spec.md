@@ -53,15 +53,21 @@ Header가 없거나, 비어 있거나, 공백뿐이거나, 등록되지 않은 �
 ```text
 1. Tenant 확인           → 400 INVALID_TENANT
 2. 요청 형식 (JSON, 타입) → 400 INVALID_REQUEST
-3. 필수값 · 길이         → 400 INVALID_REQUEST
+3. 필수값/길이           → 400 INVALID_REQUEST
 4. 수량 범위             → 400 INVALID_QUANTITY
 5. 상품 존재             → 404 PRODUCT_NOT_FOUND
-6. 상품 · 재고 상태       → 409
+6. 상품/재고 상태         → 409
 ```
 
-경로 · 메서드 오류는 위 순서와 별개로 이렇게 판정한다.
+수량은 값에 따라 2번 또는 4번에서 걸린다.
+
+- Long 범위(−9,223,372,036,854,775,808 ~ 9,223,372,036,854,775,807)를 벗어난 정수는 2번이다. 값을 읽지 못해 요청 형식 오류(`INVALID_REQUEST`)로 본다
+- Long 범위 안에서 1 미만이거나 상한을 넘는 정수는 4번이다 (`INVALID_QUANTITY`)
+
+경로와 메서드 오류는 위 순서와 별개로 이렇게 판정한다.
 
 - 지원하지 않는 HTTP 메서드(405 `METHOD_NOT_ALLOWED`)는 Tenant 확인보다 먼저 판정한다
+- `Accept`가 JSON을 받지 않으면 406 Not Acceptable이다. 405처럼 Tenant 확인보다 먼저 판정하고, 요청을 처리하지 않으며 본문이 없다
 - 존재하지 않는 경로(404 `RESOURCE_NOT_FOUND`)는 Tenant 확인 뒤에 판정한다. 헤더가 없으면 400 `INVALID_TENANT`다
 
 ---
@@ -144,9 +150,11 @@ Content-Type: application/json
 
 * `productCode`는 영문 대소문자, 숫자, `_`, `-`로 이루어진 1~100자다. 대소문자를 구분한다.
 * `productName`은 1~255자이며 비어 있거나 공백만 있을 수 없다.
+  * 공백은 U+0020 이하의 문자다 (스페이스, 탭, 줄바꿈 등). 전각 공백이나 NBSP만으로 된 상품명은 받는다
+  * NUL 문자나 짝이 없는 서로게이트가 들어간 상품명은 받지 않는다
 * 길이는 글자(문자) 단위로 센다. 이모지처럼 두 단위를 차지하는 글자도 한 글자다.
 * `quantity`는 1 이상 1,000,000,000 이하의 정수여야 한다. 상한은 설정으로 관리한다.
-* `quantity`는 JSON 정수만 받는다. 소수(`1.5`)나 문자열(`"10"`)은 `INVALID_REQUEST`다.
+* `quantity`는 JSON 정수만 받는다. 소수(`1.5`)나 문자열(`"10"`)은 `INVALID_REQUEST`다. Long 범위를 벗어난 정수도 `INVALID_REQUEST`다.
 
 ---
 
@@ -214,6 +222,14 @@ Inventory 생성
 ```
 
 #### 필수 요청 정보 누락
+
+필드가 없거나 비어 있는 경우 외에 다음 경우도 이 응답을 반환한다.
+
+* `productCode`가 100자를 넘음
+* `productCode`에 영문, 숫자, `_`, `-` 외의 문자가 있음 (예: `A 001`)
+* `productName`이 공백만으로 이루어짐
+* `productName`이 255자를 넘음
+* `productName`에 NUL 문자나 짝이 없는 서로게이트가 있음
 
 ```json
 {
@@ -292,7 +308,7 @@ Content-Type: application/json
 
 * `productCode`는 영문 대소문자, 숫자, `_`, `-`로 이루어진 1~100자다. 대소문자를 구분한다.
 * `quantity`는 1 이상 1,000,000,000 이하의 정수여야 한다. 상한은 설정으로 관리한다.
-* `quantity`는 JSON 정수만 받는다. 소수(`1.5`)나 문자열(`"10"`)은 `INVALID_REQUEST`다.
+* `quantity`는 JSON 정수만 받는다. 소수(`1.5`)나 문자열(`"10"`)은 `INVALID_REQUEST`다. Long 범위를 벗어난 정수도 `INVALID_REQUEST`다.
 
 ---
 
@@ -311,6 +327,12 @@ Content-Type: application/json
 
 `quantity`는 이 요청의 출고가 반영된 직후의 재고 수량이다.
 
+동시에 처리된 출고 요청들은 서로 다른 `quantity`를 받을 수 있다.
+
+`productName`은 저장된 상품명이다.
+
+`updatedAt`은 재고가 마지막으로 변경된 시각이다.
+
 ---
 
 ## 오류 응답
@@ -327,6 +349,11 @@ Content-Type: application/json
 ```
 
 #### 필수 요청 정보 누락
+
+필드가 없거나 비어 있는 경우 외에 다음 경우도 이 응답을 반환한다.
+
+* `productCode`가 100자를 넘음
+* `productCode`에 영문, 숫자, `_`, `-` 외의 문자가 있음 (예: `A 001`)
 
 ```json
 {
@@ -458,6 +485,7 @@ X-Tenant-Id: tenant-001
 | 400 Bad Request           | Tenant 정보, 요청 형식 또는 입력값이 올바르지 않음 |
 | 404 Not Found             | 요청 업체의 상품 중 대상 상품을 찾을 수 없음, 또는 존재하지 않는 경로     |
 | 405 Method Not Allowed    | 지원하지 않는 HTTP 메서드   |
+| 406 Not Acceptable        | `Accept`가 JSON을 받지 않음 (본문 없음, 요청은 반영되지 않음) |
 | 409 Conflict              | 현재 상품 또는 재고 상태와 충돌함   |
 | 500 Internal Server Error | 예상하지 못한 서버 오류         |
 
@@ -468,7 +496,7 @@ X-Tenant-Id: tenant-001
 | 코드 | 상태 | 설명 |
 | --- | ---: | --- |
 | `INVALID_TENANT`        |    400 | Tenant 정보가 없거나, 비어 있거나, 등록되지 않음 |
-| `INVALID_REQUEST`       |    400 | 필수 요청 정보가 누락되었거나, 형식이 올바르지 않거나, 허용 문자·길이를 벗어남 |
+| `INVALID_REQUEST`       |    400 | 필수 요청 정보가 누락되었거나, 형식이 올바르지 않거나, 허용 문자/길이를 벗어남 |
 | `INVALID_QUANTITY`      |    400 | 입고/출고 수량이 1 미만이거나 상한을 넘음 |
 | `PRODUCT_NOT_FOUND` | 404 | 요청 업체에 해당 상품코드의 상품이 없음 |
 | `PRODUCT_NAME_MISMATCH` |    409 | 기존 상품과 요청 상품명이 다름            |

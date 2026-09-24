@@ -44,7 +44,7 @@ class CurrentStockApiTest {
     }
 
     @Test
-    @DisplayName("[TC-3-01] 등록된 상품을 조회하면 200으로 상품코드·상품명·재고 수량·마지막 변경 시각을 반환하고 내부 식별자는 반환하지 않는다")
+    @DisplayName("[TC-3-01] 등록된 상품을 조회하면 200으로 상품코드, 상품명, 재고 수량, 마지막 변경 시각을 반환하고 내부 식별자는 반환하지 않는다")
     void returnsCurrentStockWithoutInternalIds() throws Exception {
         // given
         db.insertProduct("tenant-001", "A001", "Apple", 10);

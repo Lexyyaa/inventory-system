@@ -157,7 +157,7 @@ class InboundApiTest {
 
     @Test
     @DisplayName(
-            "[TC-2-07] productCode·productName·quantity가 없거나 productCode·productName이 빈 문자열이거나 productName이 공백뿐이면 INVALID_REQUEST로 거부한다")
+            "[TC-2-07] productCode/productName/quantity가 없거나 productCode/productName이 빈 문자열이거나 productName이 공백뿐이면 INVALID_REQUEST로 거부한다")
     void rejectsMissingOrBlankFields() throws Exception {
         // given
         assertThat(db.productNames("tenant-001", "A001")).isEmpty();
@@ -214,7 +214,7 @@ class InboundApiTest {
     }
 
     @Test
-    @DisplayName("[TC-2-09] 상품코드 100자와 상품명 255자는 받고, 101자 상품코드나 256자 상품명은 INVALID_REQUEST로 거부한다")
+    @DisplayName("[TC-2-09] 상품코드 100자와 상품명 255자는 받고, 101자 상품코드, 허용 문자 밖 상품코드, 256자 상품명은 INVALID_REQUEST로 거부한다")
     void acceptsMaxLengthAndRejectsOverLength() throws Exception {
         // given
         String code100 = "C".repeat(100);
@@ -223,11 +223,13 @@ class InboundApiTest {
         String name256 = "N".repeat(256);
         assertThat(db.productNames("tenant-001", code100)).isEmpty();
         assertThat(db.productNames("tenant-001", code101)).isEmpty();
+        assertThat(db.productNames("tenant-001", "A 001")).isEmpty();
         assertThat(db.productNames("tenant-001", "A001")).isEmpty();
 
         // when
         ResultActions maxLength = inbound("tenant-001", body(code100, name255, 10));
         ResultActions codeOverLength = inbound("tenant-001", body(code101, "Apple", 10));
+        ResultActions codeWithDisallowedCharacter = inbound("tenant-001", body("A 001", "Apple", 10));
         ResultActions nameOverLength = inbound("tenant-001", body("A001", name256, 10));
 
         // then
@@ -238,37 +240,17 @@ class InboundApiTest {
                 .andExpect(jsonPath("$.quantity").value(10));
         expectSeoulOffset(maxLength);
         expectError(codeOverLength, "INVALID_REQUEST", MISSING_MESSAGE);
+        expectError(codeWithDisallowedCharacter, "INVALID_REQUEST", MISSING_MESSAGE);
         expectError(nameOverLength, "INVALID_REQUEST", MISSING_MESSAGE);
         assertThat(db.productNames("tenant-001", code100)).containsExactly(name255);
         assertThat(db.inventoryQuantities("tenant-001", code100)).containsExactly(10L);
         assertThat(db.productNames("tenant-001", code101)).isEmpty();
+        assertThat(db.productNames("tenant-001", "A 001")).isEmpty();
         assertThat(db.productNames("tenant-001", "A001")).isEmpty();
     }
 
     @Test
-    @DisplayName("입고 수량이 하한 1이나 상한 1,000,000,000과 같으면 받는다")
-    void acceptsQuantityAtBothBounds() throws Exception {
-        // given
-        assertThat(db.productNames("tenant-001", "A001")).isEmpty();
-        assertThat(db.productNames("tenant-001", "B001")).isEmpty();
-
-        // when
-        ResultActions min = inbound("tenant-001", """
-                {"productCode":"A001","productName":"Apple","quantity":1}""");
-        ResultActions max = inbound("tenant-001", """
-                {"productCode":"B001","productName":"Banana","quantity":1000000000}""");
-
-        // then
-        min.andExpect(status().isOk()).andExpect(jsonPath("$.quantity").value(1));
-        max.andExpect(status().isOk()).andExpect(jsonPath("$.quantity").value(1_000_000_000L));
-        expectSeoulOffset(min);
-        expectSeoulOffset(max);
-        assertThat(db.inventoryQuantities("tenant-001", "A001")).containsExactly(1L);
-        assertThat(db.inventoryQuantities("tenant-001", "B001")).containsExactly(1_000_000_000L);
-    }
-
-    @Test
-    @DisplayName("이모지처럼 UTF-16 두 단위인 문자 255자 상품명은 받고, 256자는 INVALID_REQUEST로 거부한다")
+    @DisplayName("[TC-2-15] 이모지처럼 UTF-16 두 단위인 문자 255자 상품명은 받고, 256자는 INVALID_REQUEST로 거부한다")
     void countsProductNameLengthByCharacter() throws Exception {
         // given
         String emojiName255 = "😀".repeat(255);
@@ -297,7 +279,7 @@ class InboundApiTest {
     }
 
     @Test
-    @DisplayName("상품명에 NUL 문자나 짝 없는 서로게이트가 있으면 500이 아니라 INVALID_REQUEST로 거부하고 상품을 만들지 않는다")
+    @DisplayName("[TC-2-16] 상품명에 NUL 문자나 짝 없는 서로게이트가 있으면 500이 아니라 INVALID_REQUEST로 거부하고 상품을 만들지 않는다")
     void rejectsProductNameNotStorableInDatabase() throws Exception {
         // given
         assertThat(db.productNames("tenant-001", "A001")).isEmpty();

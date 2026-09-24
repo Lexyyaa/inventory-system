@@ -51,7 +51,7 @@ class InboundConcurrencyTest {
     }
 
     @Test
-    @DisplayName("[TC-2-11] 재고 100인 상품에 10·20·30을 동시에 입고하면 모두 성공하고 재고가 160이 된다")
+    @DisplayName("[TC-2-11] 재고 100인 상품에 10, 20, 30을 동시에 입고하면 모두 성공하고 재고가 160이 된다")
     void concurrentInboundToExistingProduct() throws Exception {
         // given
         db.insertProduct("tenant-001", "A001", "Apple", 100);
@@ -81,7 +81,7 @@ class InboundConcurrencyTest {
     }
 
     @Test
-    @DisplayName("[TC-2-12] 등록되지 않은 상품에 같은 상품명으로 10·20·30을 동시에 입고하면 상품을 하나만 만들고 재고가 60이 된다")
+    @DisplayName("[TC-2-12] 등록되지 않은 상품에 같은 상품명으로 10, 20, 30을 동시에 입고하면 상품을 하나만 만들고 재고가 60이 된다")
     void concurrentInboundCreatesSingleProduct() throws Exception {
         // given
         assertThat(db.productNames("tenant-001", "A001")).isEmpty();

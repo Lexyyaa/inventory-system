@@ -4,7 +4,7 @@
 
 - `/run-feature F2`
 - 범위: `task_list` F2의 T2-1 ~ T2-6 구현
-- T2-7(`.http`) · T2-8(작업 로그)은 메인 세션이 처리
+- T2-7(`.http`), T2-8(작업 로그)은 메인 세션이 처리
 - 브랜치: `feature/inbound`
 - 사용자 위임
   - 설계를 바꾸지 않는 작은 결정은 추천안으로 적용
@@ -14,17 +14,17 @@
 
 1. implementer 구현
    - 중간 멈춤 없음
-   - T2-1 `65775e7` `feat: 상품·재고 엔티티 구현`
+   - T2-1 `65775e7` `feat: 상품/재고 엔티티 구현`
    - T2-2 `5245d9a` `feat: 상품 생성 및 재고 증가 원자 쿼리 구현`
    - T2-3 `bed543f` `feat: 입고 API 구현`
-   - T2-4 `e92bd9a` `test: 입고 성공·실패 케이스`
+   - T2-4 `e92bd9a` `test: 입고 성공/실패 케이스`
    - T2-5 `8abf5cc` `test: 입고 엣지 케이스`
    - T2-6 `1113bf2` `test: 입고 동시성`
-2. reviewer · verifier 동시 실행
+2. reviewer와 verifier 동시 실행
    - verifier 모델: Sonnet
 3. reviewer 높음 1건 → implementer 수정
    - `94a5d20` `fix: 상품명 길이를 문자 단위로 검사`
-4. 수정분 재리뷰 · 재점검
+4. 수정분 재리뷰와 재점검
    - reviewer 높음 0건
    - verifier 높음 0건
 5. 서버 실측 (`.http` 10건)
@@ -66,13 +66,13 @@
   - `presentation/inventory/InventoryResponse.java` (생성) — `InventoryResponse.Inbound`
 - 설정
   - `support/properties/InventoryProperties.java` (생성) — 수량 상한 설정
-  - `support/config/OpenApiConfig.java` (수정) — 제목 · 설명
+  - `support/config/OpenApiConfig.java` (수정) — 제목과 설명
   - `InventorySystemApplication.java` (수정) — `@ConfigurationPropertiesScan`
   - `src/main/resources/application.yml` (수정) — `inventory.max-quantity: 1000000000`
 - 테스트 (test: `src/test/java/com/deepfine/inventorysystem/`)
   - `support/InventoryTestDb.java` (생성) — JDBC 헬퍼
   - `domain/product/ProductTest.java` (생성) — TC-2-05
-  - `presentation/inventory/InboundApiTest.java` (생성) — TC-2-01 ~ TC-2-04 · TC-2-06 ~ TC-2-09
+  - `presentation/inventory/InboundApiTest.java` (생성) — TC-2-01 ~ TC-2-04, TC-2-06 ~ TC-2-09
     - TC 번호 없는 테스트 3건 포함
   - `presentation/inventory/InboundRollbackTest.java` (생성) — TC-2-10
     - `@MockitoSpyBean` 사용
@@ -80,11 +80,11 @@
 - 실측
   - `http/inbound.http` (생성) — 입고 실측 10건
 - 문서
-  - `docs/task_list.md` (수정) — T2 체크 · **현재** 갱신 · 리뷰 백로그
+  - `docs/task_list.md` (수정) — T2 체크, **현재** 갱신, 리뷰 백로그
 
 ## 설계대로 한 것
 
-- 입고 흐름: 트랜잭션 하나 (03 §8 · §9 · §10 · §14)
+- 입고 흐름: 트랜잭션 하나 (03 §8, §9, §10, §14)
   1. 상품 생성 시도
   2. 같은 트랜잭션에서 상품 재조회
   3. 상품명 검증
@@ -99,15 +99,15 @@
   - 상품 INSERT보다 먼저
 - Request `quantity` 검증은 `@NotNull`만
 - 응답 값의 출처
-  - 수량 · 변경 시각: RETURNING 값
-  - 상품코드 · 상품명: 재조회한 `Product` 값
+  - 수량과 변경 시각: RETURNING 값
+  - 상품코드와 상품명: 재조회한 `Product` 값
 - Swagger
   - 애너테이션은 `InventoryApiDocs`에만
-  - 매핑에 `consumes` · `produces` 없음
+  - 매핑에 `consumes`/`produces` 없음
 - 동시성 TC
   - 스레드 수: 05 기준
   - 실행: `ConcurrencyRunner`
-  - 성공 · 실패 집계: MockMvc 상태 코드
+  - 성공/실패 집계: MockMvc 상태 코드
   - 판정 식 확인: DB 재조회
 
 ## 설계에 없어서 정한 것
@@ -115,7 +115,7 @@
 - 상품 재조회 조건
   - 정한 것: RETURNING 결과와 관계없이 항상 재조회
   - 다른 선택지: RETURNING이 비었을 때만 재조회
-  - 이유: 신규 · 기존 상품이 같은 검증 경로를 탐
+  - 이유: 신규/기존 상품이 같은 검증 경로를 탐
   - 이유: 응답이 항상 저장된 값
   - 대가: 신규 상품일 때 SELECT 1회 추가
 - 상품 생성 의도를 넘기는 방식
@@ -134,7 +134,7 @@
   - 계기 (임시 확인): NUL이 들어오면 500
   - 계기 (임시 확인): 짝 없는 서로게이트는 다른 문자로 저장되어 신규 상품인데 409
 - Swagger 문서
-  - 스키마 이름 충돌 → `@Schema(name)`으로 `InboundRequest` · `InboundResponse` 분리
+  - 스키마 이름 충돌 → `@Schema(name)`으로 `InboundRequest`/`InboundResponse` 분리
   - `tenantId` 파라미터는 hidden
   - 400은 에러 코드별 예시 여러 개
   - 500도 문서화
@@ -155,18 +155,18 @@
   - `+09:00` 표기는 Jackson `time-zone` 설정이 담당
   - 다른 선택지: `@SqlResultSetMapping` + `@NativeQuery`
   - 다른 선택지: 도메인 record에 `Instant`
-  - reviewer · verifier 판단: 둘 다 받아들임
-    - 도메인 · application은 `OffsetDateTime`만 봄
+  - reviewer와 verifier 판단: 둘 다 받아들임
+    - 도메인과 application은 `OffsetDateTime`만 봄
     - 성공 응답 테스트가 모두 오프셋을 단언
 
-## 리뷰 · 검증
+## 리뷰/검증
 
 - 1차 결과
-  - reviewer: 높음 1건 · 낮음 3건
-  - verifier (Sonnet): 중간 4건 · 낮음 9건
-- 재리뷰 · 재점검 (수정분 `94a5d20`)
+  - reviewer: 높음 1건, 낮음 3건
+  - verifier (Sonnet): 중간 4건, 낮음 9건
+- 재리뷰와 재점검 (수정분 `94a5d20`)
   - reviewer: 높음 0건
-  - verifier: 높음 0건 · 낮음 1건
+  - verifier: 높음 0건, 낮음 1건
 - 상품명 길이 단위 불일치
   - 지적: `@Size(max = 255)`는 UTF-16 단위로 셈
   - 지적: DB `VARCHAR(255)`는 문자 단위로 셈
@@ -177,7 +177,7 @@
   - 테스트 추가: 이모지 255자 → 200
   - 테스트 추가: 이모지 256자 → 400
   - 확인: 수정을 되돌리면 새 테스트가 실패
-- 나머지 지적 (낮음 · 중간 · 재점검 낮음)
+- 나머지 지적 (낮음, 중간, 재점검 낮음)
   - 처리: `docs/task_list.md` 리뷰 백로그
   - 항목별 원문은 백로그의 F2 행
 - 백로그로 간 것 — TC가 없는 경우
@@ -186,7 +186,7 @@
   - 정의되지 않은 필드 무시
   - 상품코드 대소문자 구분
 - 백로그로 간 것 — 문서
-  - 상품명 · 상품코드 길이를 세는 단위
+  - 상품명과 상품코드 길이를 세는 단위
   - 02 §3 "공백"의 범위
   - 03 §9 재조회 문구와 구현의 차이
   - 04 §3 길이 위반 문구
@@ -196,42 +196,42 @@
 - F2 리뷰 반영에 넣을 것 (사용자 위임)
   - 03 §9 재조회 문구를 구현에 맞춤
   - `src/main/CLAUDE.md` RETURNING 규칙에 추가: native `timestamptz`는 `Instant` → 인프라 projection
-  - 02 §3 · 04 §3에 "길이는 문자 단위" 명시
+  - 02 §3, 04 §3에 "길이는 문자 단위" 명시
   - 구현 체크리스트 3줄 (아래 "자주 틀리는 것 후보")
 - 05 TC 추가 제안 (F2 엣지)
-  - 수량 1 · 1,000,000,000은 받는다
-  - 상품명 NUL · 짝 없는 서로게이트는 400
-  - 상품명 이모지 255자 200 · 256자 400
+  - 수량 1과 1,000,000,000은 받는다
+  - 상품명 NUL과 짝 없는 서로게이트는 400
+  - 상품명 이모지 255자 200, 256자 400
   - 세 건 모두 코드에는 TC 번호 없이 이미 있음
 
 ## 실행 확인
 
 - `./gradlew clean spotlessApply build` → 성공
-  - 구현 직후: 테스트 42개 통과 · 실패 0
-  - 수정(`94a5d20`) 후: 테스트 43개 통과 · 실패 0
+  - 구현 직후: 테스트 42개 통과, 실패 0
+  - 수정(`94a5d20`) 후: 테스트 43개 통과, 실패 0
   - 이 수에 F2 TC-2-01 ~ TC-2-13 테스트가 들어 있음
 - 거짓 통과 점검 (운영 코드를 망가뜨린 뒤 되돌림)
-  - UPSERT를 읽고-계산-쓰기로 바꿈 → TC-2-11 · TC-2-12 실패
-  - `ON CONFLICT`를 조회 후 INSERT로 바꿈 → TC-2-12 · TC-2-13 실패
+  - UPSERT를 읽고-계산-쓰기로 바꿈 → TC-2-11, TC-2-12 실패
+  - `ON CONFLICT`를 조회 후 INSERT로 바꿈 → TC-2-12, TC-2-13 실패
   - `@Transactional` 제거 → TC-2-10 실패
   - 상품명 비교 완화 → TC-2-05 실패
   - 상한 비교를 `>=`로 바꿈 → 양 끝값 테스트만 실패
   - 수량 검사 삭제 → TC-2-06 실패
   - 수정(`94a5d20`)을 되돌림 → 새로 추가한 이모지 길이 테스트 실패
-- `.http` 실측 → `http/inbound.http` 10건 모두 기대와 일치 (상태 · 본문 · DB)
+- `.http` 실측 → `http/inbound.http` 10건 모두 기대와 일치 (상태, 본문, DB)
   - 준비: DB 초기화 후 `./gradlew bootRun`
-  - 수정 전 1회 · 수정 후 1회 실행
+  - 수정 전 1회, 수정 후 1회 실행
   - 서버 로그 ERROR 0건
 - `.http` 케이스별 결과
   - `[TC-2-01]` 신규 상품 입고 → 200
-    - 본문: `productCode` IN-A001 · `productName` Apple · `quantity` 10
+    - 본문: `productCode` IN-A001, `productName` Apple, `quantity` 10
     - DB: tenant-001 IN-A001 재고 10
   - `[TC-2-02]` 기존 상품 입고 → 200
     - 본문: `quantity` 40
     - DB: 재고 40
     - DB: tenant-001 IN-A001 상품 1건
   - `[TC-2-03]` 다른 업체의 같은 상품코드 → 200
-    - 본문: `productName` Samsung · `quantity` 5
+    - 본문: `productName` Samsung, `quantity` 5
     - DB: tenant-002 IN-A001 재고 5
     - DB: tenant-001 IN-A001 재고 40 유지
   - `[TC-2-04]` 상품명 불일치 → 409
@@ -274,7 +274,7 @@
   - 해결: 인프라 projection으로 받은 뒤 변환 ("설계와 다르게 간 것")
 - Swagger 스키마 이름 충돌
   - 해결: `@Schema(name)`으로 이름 분리
-- 상품명 NUL → 500 · 짝 없는 서로게이트 → 409
+- 상품명 NUL → 500, 짝 없는 서로게이트 → 409
   - 해결: `@Pattern`으로 400 `INVALID_REQUEST`
 - 게이트(`./gradlew spotlessApply build`) 재실패 없음
 
@@ -295,23 +295,23 @@
 ## 사용자 코드 리뷰
 
 - 웹 계층 정리
-  - 인터셉터 · 컨트롤러를 `presentation/interceptor` · `presentation/controller`로 나눔
+  - 인터셉터와 컨트롤러를 `presentation/interceptor`, `presentation/controller`로 나눔
   - 웹 설정을 `support/config/WebConfig`로 옮기고 `/api/v1`을 한 곳에서 붙임
   - ArgumentResolver 삭제 → `@RequestAttribute`
-- 입고를 도메인 서비스(`ProductService` · `InventoryService`)로 나눔
+- 입고를 도메인 서비스(`ProductService`, `InventoryService`)로 나눔
   - ApplicationService는 조합과 트랜잭션만
   - 컨트롤러는 `toCommand` → 서비스 → `Response.from` 세 줄
   - 업체 확인도 `TenantService`로 나눔
-- 재고 변경 결과를 `InventoryState(Instant)` 하나로 받음 (`InventorySnapshot` · `ChangedRow` 삭제)
-- 모든 테이블에 `created_at` · `updated_at`, 매핑 전용 `BaseTimeEntity`
+- 재고 변경 결과를 `InventoryState(Instant)` 하나로 받음 (`InventorySnapshot`, `ChangedRow` 삭제)
+- 모든 테이블에 `created_at`/`updated_at`, 매핑 전용 `BaseTimeEntity`
 - 쓰지 않는 코드 삭제
   - `TransactionRunner`
   - `Product` 생성자의 null 검사
   - 생성자와 같은 정적 팩토리
 - 주석 정리: 기본 없음, 필요한 "왜"만 짧게
-- 원자 SQL(`ON CONFLICT` · UPSERT)은 그대로 둠
-- 합의 내용을 규칙 문서(`CLAUDE.md` 3개 · 체크리스트)와 03에 반영
+- 원자 SQL(`ON CONFLICT`, UPSERT)은 그대로 둠
+- 합의 내용을 규칙 문서(`CLAUDE.md` 3개, 체크리스트)와 03에 반영
 - 확인
   - 테스트 41개 통과
   - `.http` 10건 일치
-  - 합의 누락 · 회귀 리뷰에서 코드 결함 0건 (규칙 문서 문구 2건 수정)
+  - 합의 누락/회귀 리뷰에서 코드 결함 0건 (규칙 문서 문구 2건 수정)

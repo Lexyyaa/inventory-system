@@ -17,7 +17,7 @@ public enum ErrorCode {
     // 업체
     INVALID_TENANT(HttpStatus.BAD_REQUEST, "Tenant 정보가 없거나 등록되지 않았습니다."),
 
-    // 상품 · 재고
+    // 상품/재고
     INVALID_QUANTITY(HttpStatus.BAD_REQUEST, "입고 수량이 허용 범위를 벗어났습니다."),
     PRODUCT_NOT_FOUND(HttpStatus.NOT_FOUND, "상품을 찾을 수 없습니다."),
     PRODUCT_NAME_MISMATCH(HttpStatus.CONFLICT, "동일한 상품코드에 등록된 상품명과 일치하지 않습니다."),
