@@ -214,6 +214,78 @@ class InboundApiTest {
         assertThat(db.inventoryQuantities("tenant-001", "A001")).isEmpty();
     }
 
+    @Test
+    @DisplayName("[TC-2-09] 상품코드 100자와 상품명 255자는 받고, 101자 상품코드나 256자 상품명은 INVALID_REQUEST로 거부한다")
+    void acceptsMaxLengthAndRejectsOverLength() throws Exception {
+        // given
+        String code100 = "C".repeat(100);
+        String name255 = "N".repeat(255);
+        String code101 = "D".repeat(101);
+        String name256 = "N".repeat(256);
+        assertThat(db.productNames("tenant-001", code100)).isEmpty();
+        assertThat(db.productNames("tenant-001", code101)).isEmpty();
+        assertThat(db.productNames("tenant-001", "A001")).isEmpty();
+
+        // when
+        ResultActions maxLength = inbound("tenant-001", body(code100, name255, 10));
+        ResultActions codeOverLength = inbound("tenant-001", body(code101, "Apple", 10));
+        ResultActions nameOverLength = inbound("tenant-001", body("A001", name256, 10));
+
+        // then
+        maxLength
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.productCode").value(code100))
+                .andExpect(jsonPath("$.productName").value(name255))
+                .andExpect(jsonPath("$.quantity").value(10));
+        expectSeoulOffset(maxLength);
+        expectError(codeOverLength, "INVALID_REQUEST", MISSING_MESSAGE);
+        expectError(nameOverLength, "INVALID_REQUEST", MISSING_MESSAGE);
+        assertThat(db.productNames("tenant-001", code100)).containsExactly(name255);
+        assertThat(db.inventoryQuantities("tenant-001", code100)).containsExactly(10L);
+        assertThat(db.productNames("tenant-001", code101)).isEmpty();
+        assertThat(db.productNames("tenant-001", "A001")).isEmpty();
+    }
+
+    // 05에 없는 케이스 (TC 추가 제안): 수량 범위의 양 끝 값은 받는다
+    @Test
+    @DisplayName("입고 수량이 하한 1이나 상한 1,000,000,000과 같으면 받는다")
+    void acceptsQuantityAtBothBounds() throws Exception {
+        // given
+        assertThat(db.productNames("tenant-001", "A001")).isEmpty();
+        assertThat(db.productNames("tenant-001", "B001")).isEmpty();
+
+        // when
+        ResultActions min = inbound("tenant-001", """
+                {"productCode":"A001","productName":"Apple","quantity":1}""");
+        ResultActions max = inbound("tenant-001", """
+                {"productCode":"B001","productName":"Banana","quantity":1000000000}""");
+
+        // then
+        min.andExpect(status().isOk()).andExpect(jsonPath("$.quantity").value(1));
+        max.andExpect(status().isOk()).andExpect(jsonPath("$.quantity").value(1_000_000_000L));
+        assertThat(db.inventoryQuantities("tenant-001", "A001")).containsExactly(1L);
+        assertThat(db.inventoryQuantities("tenant-001", "B001")).containsExactly(1_000_000_000L);
+    }
+
+    // 05에 없는 케이스 (TC 추가 제안): PostgreSQL 문자열에 저장할 수 없는 상품명은 DB까지 가지 않고 400이다
+    @Test
+    @DisplayName("상품명에 NUL 문자나 짝 없는 서로게이트가 있으면 500이 아니라 INVALID_REQUEST로 거부하고 상품을 만들지 않는다")
+    void rejectsProductNameNotStorableInDatabase() throws Exception {
+        // given
+        assertThat(db.productNames("tenant-001", "A001")).isEmpty();
+
+        // when
+        ResultActions nul = inbound("tenant-001", """
+                {"productCode":"A001","productName":"App\\u0000le","quantity":10}""");
+        ResultActions loneSurrogate = inbound("tenant-001", """
+                {"productCode":"A001","productName":"App\\uD800le","quantity":10}""");
+
+        // then
+        expectError(nul, "INVALID_REQUEST", MISSING_MESSAGE);
+        expectError(loneSurrogate, "INVALID_REQUEST", MISSING_MESSAGE);
+        assertThat(db.productNames("tenant-001", "A001")).isEmpty();
+    }
+
     /** tenantCode가 null이면 X-Tenant-Id 헤더를 넣지 않는다. */
     private ResultActions inbound(String tenantCode, String body) throws Exception {
         MockHttpServletRequestBuilder request =
@@ -222,6 +294,11 @@ class InboundApiTest {
             request.header(TENANT_HEADER, tenantCode);
         }
         return mockMvc.perform(request);
+    }
+
+    private static String body(String productCode, String productName, long quantity) {
+        return """
+                {"productCode":"%s","productName":"%s","quantity":%d}""".formatted(productCode, productName, quantity);
     }
 
     private static void expectError(ResultActions result, String code, String message) throws Exception {
