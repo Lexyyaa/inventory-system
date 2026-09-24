@@ -12,6 +12,7 @@
 - 테스트의 `@DisplayName`은 각 TC의 DisplayName을 그대로 쓴다
 - 테스트 본문은 `// given` `// when` `// then`으로 나누고 TC의 given · when · then을 따른다
 - 별도 표기가 없으면 요청 업체는 `tenant-001`이다
+- given의 상품 · 재고는 입고 API를 거치지 않고 DB에 직접 넣는다. 입고가 깨져도 조회 · 출고 테스트가 같이 깨지지 않게 하려는 것이다
 - 성공 응답의 `updatedAt`은 `+09:00` 오프셋이 붙은 ISO-8601이다. TC마다 적지 않지만 모든 성공 응답에서 확인한다
 - 동시성 TC는 다음 판정 식이 성립해야 한다
   - 최종 재고 = 초기 재고 + 성공한 입고 수량의 합 − 성공한 출고 수량의 합
@@ -514,12 +515,8 @@
 - 테스트: 통합 (API)
 - given
   - 업체: tenant-001
-  - 입고 API로 만든다
-    - POST /api/v1/inventory/inbound
-    - 헤더 `X-Tenant-Id: tenant-001`
-    - 본문 `{"productCode": "A001", "productName": "Apple", "quantity": 10}`
-    - 응답 200
-      - `quantity`: 10
+  - DB에 직접 넣는다
+    - tenant-001 / A001 / Apple, 재고 10
 - when
   - GET /api/v1/inventory/A001
   - 헤더 `X-Tenant-Id: tenant-001`
@@ -541,15 +538,9 @@
 - DisplayName: `[TC-3-02] tenant-001과 tenant-002가 각자의 A001을 조회하면 각각 200과 자기 업체의 재고 10과 20을 반환한다`
 - 테스트: 통합 (API)
 - given
-  - 입고 API로 만든다
-    - 공통
-      - POST /api/v1/inventory/inbound
-    - 입고 1
-      - 헤더 `X-Tenant-Id: tenant-001`
-      - 본문 `{"productCode": "A001", "productName": "Apple", "quantity": 10}`
-    - 입고 2
-      - 헤더 `X-Tenant-Id: tenant-002`
-      - 본문 `{"productCode": "A001", "productName": "Samsung", "quantity": 20}`
+  - DB에 직접 넣는다
+    - tenant-001 / A001 / Apple, 재고 10
+    - tenant-002 / A001 / Samsung, 재고 20
 - when
   - 공통
     - GET /api/v1/inventory/A001
@@ -583,10 +574,8 @@
 - 테스트: 통합 (API)
 - given
   - 업체: tenant-001
-  - 입고 API로 만든다
-    - POST /api/v1/inventory/inbound
-    - 헤더 `X-Tenant-Id: tenant-001`
-    - 본문 `{"productCode": "A001", "productName": "Apple", "quantity": 10}`
+  - DB에 직접 넣는다
+    - tenant-001 / A001 / Apple, 재고 10
   - tenant-001에 B001 상품은 없다
 - when
   - GET /api/v1/inventory/B001
@@ -611,10 +600,8 @@
 - 테스트: 통합 (API)
 - given
   - 업체: tenant-001, tenant-002
-  - 입고 API로 만든다
-    - POST /api/v1/inventory/inbound
-    - 헤더 `X-Tenant-Id: tenant-001`
-    - 본문 `{"productCode": "A001", "productName": "Apple", "quantity": 10}`
+  - DB에 직접 넣는다
+    - tenant-001 / A001 / Apple, 재고 10
   - tenant-002에는 상품이 없다
 - when
   - GET /api/v1/inventory/A001
@@ -646,7 +633,7 @@
 - 테스트: 통합 (API)
 - given
   - 업체 `tenant-001`, 상품 `A001` / `Apple`, 재고 100
-  - 입고 API로 만든다: 본문 `{"productCode":"A001","productName":"Apple","quantity":100}`
+  - DB에 직접 넣는다: tenant-001 / A001 / Apple, 재고 100
 - when
   - `POST /api/v1/inventory/outbound`
   - 헤더 `X-Tenant-Id: tenant-001`
@@ -674,7 +661,7 @@
 - 테스트: 통합 (API)
 - given
   - 업체 `tenant-001`
-  - `A001` 상품을 입고하지 않는다
+  - `A001` 상품을 넣지 않는다
 - when
   - `POST /api/v1/inventory/outbound`
   - 헤더 `X-Tenant-Id: tenant-001`
@@ -695,8 +682,8 @@
 - 테스트: 통합 (API)
 - given
   - 업체 `tenant-001`, 상품 `A001` / `Apple`, 재고 10
-  - 입고 API로 만든다: 본문 `{"productCode":"A001","productName":"Apple","quantity":10}`
-  - 입고 응답의 `updatedAt`을 기록한다
+  - DB에 직접 넣는다: tenant-001 / A001 / Apple, 재고 10
+  - 재고 행의 `updated_at`을 기록한다
 - when
   - `POST /api/v1/inventory/outbound`
   - 헤더 `X-Tenant-Id: tenant-001`
@@ -706,7 +693,7 @@
     - `code`: `INSUFFICIENT_STOCK`
   - 이어서 조회 API `GET /api/v1/inventory/A001` 응답 200
     - `quantity`: 10 (변경 없음)
-    - `updatedAt`: 입고 응답의 `updatedAt`과 같다
+    - `updatedAt`: given에서 기록한 `updated_at`과 같은 시각
 
 ---
 
@@ -716,7 +703,7 @@
 - 테스트: 통합 (API)
 - given
   - 업체 `tenant-001`, 상품 `A001` / `Apple`, 재고 10
-  - 입고 API로 만든다: 본문 `{"productCode":"A001","productName":"Apple","quantity":10}`
+  - DB에 직접 넣는다: tenant-001 / A001 / Apple, 재고 10
 - when
   - 공통
     - `POST /api/v1/inventory/outbound`
@@ -745,7 +732,7 @@
 - 테스트: 통합 (API)
 - given
   - 업체 `tenant-001`, 상품 `A001` / `Apple`, 재고 10
-  - 입고 API로 만든다: 본문 `{"productCode":"A001","productName":"Apple","quantity":10}`
+  - DB에 직접 넣는다: tenant-001 / A001 / Apple, 재고 10
 - when
   - `POST /api/v1/inventory/outbound`
   - 헤더 `X-Tenant-Id: tenant-001`
@@ -768,8 +755,8 @@
 - 테스트: 통합 (API)
 - given
   - 업체 `tenant-001`, 상품 `A001` / `Apple`, 재고 10
-  - 입고 API로 만든다: 헤더 `X-Tenant-Id: tenant-001`, 본문 `{"productCode":"A001","productName":"Apple","quantity":10}`
-  - 입고 응답의 `updatedAt`을 기록한다
+  - DB에 직접 넣는다: tenant-001 / A001 / Apple, 재고 10
+  - 재고 행의 `updated_at`을 기록한다
   - `tenant-002`에는 `A001` 상품이 없다
 - when
   - `POST /api/v1/inventory/outbound`
@@ -781,7 +768,7 @@
   - `tenant-001`로 조회 API `GET /api/v1/inventory/A001` 응답 200
     - `quantity`: 10 (변경 없음)
     - `productName`: `Apple` (변경 없음)
-    - `updatedAt`: 입고 응답의 `updatedAt`과 같다
+    - `updatedAt`: given에서 기록한 `updated_at`과 같은 시각
   - `tenant-002`로 조회 API `GET /api/v1/inventory/A001` 응답 404
     - `code`: `PRODUCT_NOT_FOUND`
   - DB
@@ -797,7 +784,7 @@
 - 테스트: 통합 (API)
 - given
   - 업체 `tenant-001`, 상품 `A001` / `Apple`, 재고 10
-  - 입고 API로 만든다: 본문 `{"productCode":"A001","productName":"Apple","quantity":10}`
+  - DB에 직접 넣는다: tenant-001 / A001 / Apple, 재고 10
 - when
   - `ConcurrencyRunner.run`으로 스레드 2개를 시작 래치로 동시에 출발시킨다
   - 스레드마다
@@ -824,7 +811,7 @@
 - 테스트: 통합 (API)
 - given
   - 업체 `tenant-001`, 상품 `A001` / `Apple`, 재고 100
-  - 입고 API로 만든다: 본문 `{"productCode":"A001","productName":"Apple","quantity":100}`
+  - DB에 직접 넣는다: tenant-001 / A001 / Apple, 재고 100
 - when
   - `ConcurrencyRunner.run`으로 스레드 20개를 시작 래치로 동시에 출발시킨다
   - 스레드마다
@@ -851,7 +838,7 @@
 - 테스트: 통합 (API)
 - given
   - 업체 `tenant-001`, 상품 `A001` / `Apple`, 재고 10
-  - 입고 API로 만든다: 본문 `{"productCode":"A001","productName":"Apple","quantity":10}`
+  - DB에 직접 넣는다: tenant-001 / A001 / Apple, 재고 10
 - when
   - `ConcurrencyRunner.run`으로 스레드 2개를 시작 래치로 동시에 출발시킨다
   - 공통
