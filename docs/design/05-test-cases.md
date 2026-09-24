@@ -3,25 +3,25 @@
 본 문서는 구현할 테스트 케이스를 기능별로 정의한다.
 
 - TC 번호의 가운데 숫자는 기능 번호다 (1 기초 설정, 2 입고, 3 조회, 4 출고)
-- 기능마다 성공 · 실패 · 엣지 · 동시성 케이스로 나눈다 (기초 설정은 데이터 제약)
+- 기능마다 성공, 실패, 엣지, 동시성 케이스로 나눈다 (기초 설정은 데이터 제약)
 - 테스트 종류
   - 도메인 단위: Spring과 DB 없이 도메인 객체만 검증한다
   - 통합 (API): MockMvc 요청부터 DB까지 검증한다
   - 통합 (저장소): API를 거치지 않고 DB에 직접 저장해 제약을 검증한다
   - 통합 테스트는 모두 Testcontainers로 띄운 PostgreSQL을 쓴다
 - 테스트의 `@DisplayName`은 각 TC의 DisplayName을 그대로 쓴다
-- 테스트 본문은 `// given` `// when` `// then`으로 나누고 TC의 given · when · then을 따른다
+- 테스트 본문은 `// given` `// when` `// then`으로 나누고 TC의 given/when/then을 따른다
 - 별도 표기가 없으면 요청 업체는 `tenant-001`이다
-- given의 상품 · 재고는 입고 API를 거치지 않고 DB에 직접 넣는다. 입고가 깨져도 조회 · 출고 테스트가 같이 깨지지 않게 하려는 것이다
+- given의 상품과 재고는 입고 API를 거치지 않고 DB에 직접 넣는다. 입고가 깨져도 조회와 출고 테스트가 같이 깨지지 않게 하려는 것이다
 - 성공 응답의 `updatedAt`은 `+09:00` 오프셋이 붙은 ISO-8601이다. TC마다 적지 않지만 모든 성공 응답에서 확인한다
 - 동시성 TC는 다음 판정 식이 성립해야 한다
   - 최종 재고 = 초기 재고 + 성공한 입고 수량의 합 − 성공한 출고 수량의 합
 
 ---
 
-## F1 기초 설정 (업체 식별 · 데이터 제약)
+## F1 기초 설정 (업체 식별, 데이터 제약)
 
-- 업체 확인(TC-1-01~02)은 아직 입고 · 조회 · 출고 API가 없어서, 테스트에만 두는 엔드포인트 `GET /api/v1/test/tenant`로 확인한다
+- 업체 확인(TC-1-01~02)은 아직 입고, 조회, 출고 API가 없어서, 테스트에만 두는 엔드포인트 `GET /api/v1/test/tenant`로 확인한다
 - 데이터 제약(TC-1-03~04)은 API를 거치지 않고 DB에 직접 저장해서 확인한다
 - 테스트 종류
   - 통합 (API): TC-1-01 ~ TC-1-02
@@ -269,7 +269,7 @@
 
 #### TC-2-07 필수값 누락과 빈 문자열
 
-- DisplayName: `[TC-2-07] productCode·productName·quantity가 없거나 productCode·productName이 빈 문자열이거나 productName이 공백뿐이면 INVALID_REQUEST로 거부한다`
+- DisplayName: `[TC-2-07] productCode/productName/quantity가 없거나 productCode/productName이 빈 문자열이거나 productName이 공백뿐이면 INVALID_REQUEST로 거부한다`
 - 테스트: 통합 (API)
 - given
   - tenant-001에 상품코드 A001 상품 없음
@@ -332,9 +332,9 @@
 
 ### 엣지 케이스
 
-#### TC-2-09 상품코드 · 상품명 길이 경계
+#### TC-2-09 상품코드/상품명 길이와 허용 문자 경계
 
-- DisplayName: `[TC-2-09] 상품코드 100자와 상품명 255자는 받고, 101자 상품코드나 256자 상품명은 INVALID_REQUEST로 거부한다`
+- DisplayName: `[TC-2-09] 상품코드 100자와 상품명 255자는 받고, 101자 상품코드, 허용 문자 밖 상품코드, 256자 상품명은 INVALID_REQUEST로 거부한다`
 - 테스트: 통합 (API)
 - given
   - tenant-001에 아래 상품코드의 상품이 하나도 없다
@@ -349,19 +349,22 @@
     - 상품코드 `D` 101자, 상품명 `Apple`
   - 요청 3
     - 상품코드 `A001`, 상품명 `N` 256자
+  - 요청 4
+    - 상품코드 `A 001`(공백 포함), 상품명 `Apple`
 - then
   - 요청 1
     - 응답 200
       - `productCode`: 요청 값 그대로
       - `productName`: 요청 값 그대로
       - `quantity`: 10
-  - 요청 2 · 3 각각
+  - 요청 2, 3, 4 각각
     - 응답 400 (500이 아니다)
       - `code`: `INVALID_REQUEST`
   - DB
     - tenant-001 / `C` 100자: 상품 1개, 재고 10
     - tenant-001 / `D` 101자: 상품 0개
     - tenant-001 / `A001`: 상품 0개
+    - tenant-001 / `A 001`: 상품 0개
 
 ---
 
@@ -403,11 +406,64 @@
 
 ---
 
+#### TC-2-15 상품명 길이를 글자 단위로 셈
+
+- DisplayName: `[TC-2-15] 이모지처럼 UTF-16 두 단위인 문자 255자 상품명은 받고, 256자는 INVALID_REQUEST로 거부한다`
+- 테스트: 통합 (API)
+- given
+  - tenant-001에 A001, B001 상품 없음
+- when
+  - 공통
+    - `POST /api/v1/inventory/inbound`
+    - 헤더 `X-Tenant-Id: tenant-001`
+    - 수량 10
+  - 요청 1
+    - 상품코드 `A001`, 상품명 `😀` 255자 (UTF-16 510단위)
+  - 요청 2
+    - 상품코드 `B001`, 상품명 `😀` 256자
+- then
+  - 요청 1
+    - 응답 200
+      - `productName`: 요청 값 그대로
+      - `quantity`: 10
+  - 요청 2
+    - 응답 400
+      - `code`: `INVALID_REQUEST`
+  - DB
+    - tenant-001 / A001: 상품 1개 (상품명 255글자), 재고 10
+    - tenant-001 / B001: 상품 0개
+
+---
+
+#### TC-2-16 저장할 수 없는 상품명
+
+- DisplayName: `[TC-2-16] 상품명에 NUL 문자나 짝 없는 서로게이트가 있으면 500이 아니라 INVALID_REQUEST로 거부하고 상품을 만들지 않는다`
+- 테스트: 통합 (API)
+- given
+  - tenant-001에 A001 상품 없음
+- when
+  - 공통
+    - `POST /api/v1/inventory/inbound`
+    - 헤더 `X-Tenant-Id: tenant-001`
+  - 요청 1
+    - 본문 `{"productCode":"A001","productName":"App\u0000le","quantity":10}`
+  - 요청 2
+    - 본문 `{"productCode":"A001","productName":"App\uD800le","quantity":10}`
+- then
+  - 요청 1, 2 각각
+    - 응답 400 (500이 아니다)
+      - `code`: `INVALID_REQUEST`
+      - `message`: `필수 요청 정보가 누락되었습니다.`
+  - DB
+    - tenant-001 / A001: 상품 0개
+
+---
+
 ### 동시성 케이스
 
 #### TC-2-11 기존 상품 동시 입고
 
-- DisplayName: `[TC-2-11] 재고 100인 상품에 10·20·30을 동시에 입고하면 모두 성공하고 재고가 160이 된다`
+- DisplayName: `[TC-2-11] 재고 100인 상품에 10, 20, 30을 동시에 입고하면 모두 성공하고 재고가 160이 된다`
 - 테스트: 통합 (API)
 - given
   - DB에 직접 넣는다
@@ -429,7 +485,7 @@
       - `productCode`: 모두 `A001`
       - `productName`: 모두 `Apple`
       - `quantity`: 최댓값 160
-      - 초기 재고 100과 응답 quantity 3개를 오름차순 정렬하면 이웃한 값의 차이 3개가 10·20·30의 한 순열
+      - 초기 재고 100과 응답 quantity 3개를 오름차순 정렬하면 이웃한 값의 차이 3개가 10, 20, 30의 한 순열
         - 예: 100, 120, 130, 160 → 20, 10, 30
     - 실패 0건
   - DB
@@ -441,7 +497,7 @@
 
 #### TC-2-12 신규 상품 동시 입고
 
-- DisplayName: `[TC-2-12] 등록되지 않은 상품에 같은 상품명으로 10·20·30을 동시에 입고하면 상품을 하나만 만들고 재고가 60이 된다`
+- DisplayName: `[TC-2-12] 등록되지 않은 상품에 같은 상품명으로 10, 20, 30을 동시에 입고하면 상품을 하나만 만들고 재고가 60이 된다`
 - 테스트: 통합 (API)
 - given
   - tenant-001에 상품코드 A001 상품 없음
@@ -511,7 +567,7 @@
 
 #### TC-3-01 등록된 상품 조회
 
-- DisplayName: `[TC-3-01] 등록된 상품을 조회하면 200으로 상품코드·상품명·재고 수량·마지막 변경 시각을 반환하고 내부 식별자는 반환하지 않는다`
+- DisplayName: `[TC-3-01] 등록된 상품을 조회하면 200으로 상품코드, 상품명, 재고 수량, 마지막 변경 시각을 반환하고 내부 식별자는 반환하지 않는다`
 - 테스트: 통합 (API)
 - given
   - 업체: tenant-001
@@ -634,7 +690,7 @@
   - 요청 2 (공백 포함)
     - GET /api/v1/inventory/A 001
 - then
-  - 요청 1 · 2 각각
+  - 요청 1, 2 각각
     - 응답 404
       - `code`: `PRODUCT_NOT_FOUND`
       - `message`: `상품을 찾을 수 없습니다.`
@@ -752,6 +808,7 @@
 - given
   - 업체 `tenant-001`, 상품 `A001` / `Apple`, 재고 10
   - DB에 직접 넣는다: tenant-001 / A001 / Apple, 재고 10
+  - 재고 행의 `updated_at`을 기록한다
 - when
   - 공통
     - `POST /api/v1/inventory/outbound`
@@ -769,6 +826,7 @@
       - `code`: `INVALID_QUANTITY`
   - 조회 API `GET /api/v1/inventory/A001` 응답 200
     - `quantity`: 10 (변경 없음)
+    - `updatedAt`: given에서 기록한 `updated_at`과 같은 시각
 
 ---
 

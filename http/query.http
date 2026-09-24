@@ -1,7 +1,8 @@
 # 현재 재고 조회 API 실측 (F3)
-# 실행: 서버를 띄운 뒤 python3 scripts/run_http.py http/query.http
-# 순서 의존: 위에서 아래로. 준비 입고로 Q-A001 · Q-C001을 만든 뒤 조회한다
-# 매번 빈 DB에서 시작한다 (docker compose down -v && docker compose up -d)
+# 서버: docker compose up -d && ./gradlew bootRun
+# 실행: python3 scripts/run_http.py http/query.http (IntelliJ HTTP Client로도 실행할 수 있다)
+# 순서 의존: 위에서 아래로. 준비 입고로 Q-A001과 Q-C001을 만든 뒤 조회한다
+# 빈 DB에서 시작한다 (docker compose down -v && docker compose up -d). 세 파일은 상품코드 접두어(IN-, Q-, OUT-)가 달라 같은 DB에서 이어서 돌려도 된다
 
 @host = http://localhost:8080
 

@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""`.http` 실행 케이스를 재연하고 @expect · @db를 대조한다 (/verify-http 3 · 4단계).
+"""`.http` 실행 케이스를 재연하고 @expect와 @db를 대조한다 (/verify-http 3, 4단계).
 
 사용: python3 scripts/run_http.py http/{name}.http
 - 서버(localhost)와 PostgreSQL 컨테이너가 떠 있어야 한다
-- DB 접속은 환경 변수로 바꾼다: PG_CONTAINER · PG_USER · PG_PASSWORD · PG_DATABASE
+- DB 접속은 환경 변수로 바꾼다: PG_CONTAINER, PG_USER, PG_PASSWORD, PG_DATABASE
 - 멀티파트 요청은 지원하지 않는다 — 해당 요청은 curl -F로 따로 확인한다
 - 불일치가 있으면 종료 코드 1
 """

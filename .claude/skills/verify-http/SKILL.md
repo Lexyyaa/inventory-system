@@ -10,13 +10,13 @@ disable-model-invocation: true
 대상: `$ARGUMENTS` (비어 있으면 `http/*.http` 전체)
 
 - 서버를 띄워 .http 실행 케이스를 curl로 재연한다
-- 대조 항목: 상태코드·응답 본문·DB 상태
+- 대조 항목: 상태코드, 응답 본문, DB 상태
 - 코드는 고치지 않는다
 
 `/run-feature` 3단계도 이 절차를 그대로 따른다.
 이 스킬은 **확인만** 한다.
 
-- 코드 · 문서를 고치지 않는다
+- 코드와 문서를 고치지 않는다
 - 커밋하지 않는다
 
 ## .http 작성 규칙
@@ -49,12 +49,12 @@ Content-Type: application/json
 - `# @expect {상태코드}` — 필수
 - `# @expect $.code == "..."` — 에러 케이스는 필수 (04 §2 공통 오류 응답)
   - 같은 400끼리 거짓 통과가 나지 않게
-- `# @expect $.필드 == 값` — 부분 성공 · 생성 API는 필수
+- `# @expect $.필드 == 값` — 부분 성공과 생성 API는 필수
   - 상태코드만 보면 거짓 통과가 난다
-- `# @db {SQL} => {기대값}` — 저장 · 변경이 있는 요청은 필수
+- `# @db {SQL} => {기대값}` — 저장/변경이 있는 요청은 필수
 - 앞 요청의 응답 값(id 등)을 쓰는 요청은 의존을 적는다
   - 선언: `# @uses {변수} = [TC-x-yy].$.경로`
-  - 사용: 경로 · 헤더 · 본문에 `{{변수}}`
+  - 사용: 경로, 헤더, 본문에 `{{변수}}`
   - 같은 파일의 앞 요청만 참조한다 (run_http.py는 파일마다 응답을 새로 기억한다)
   - 파일에 필요한 상품은 그 파일 안의 준비 입고로 만든다
   - 상품코드에 파일별 접두어(inbound `IN-`, query `Q-`, outbound `OUT-`)를 붙여 전체 실행에서도 값이 겹치지 않게 한다
@@ -65,10 +65,10 @@ Content-Type: application/json
    - 인자가 `F번호`면 task_list에서 브랜치 이름을 찾아 `http/{name}.http`
    - 파일명이면 그 파일
    - 없으면 전체 — task_list의 F 순서대로 파일을 돈다
-2. **DB 초기화 · 서버 기동**
+2. **DB 초기화와 서버 기동**
    - `docker compose down -v && docker compose up -d`
      - 매번 빈 DB에서 시작한다
-     - 이전 실행의 데이터(상품 · 누적 재고)가 남으면 거짓 불일치가 난다
+     - 이전 실행의 데이터(상품, 누적 재고)가 남으면 거짓 불일치가 난다
      - `schema.sql` 변경도 이렇게 반영된다 (`IF NOT EXISTS`라 볼륨을 지워야 한다)
    - 아래 명령이 성공할 때까지 대기한다
      - `docker exec inventory-system-postgres psql -h localhost -U app -d inventory-system -c "SELECT 1"`
@@ -79,10 +79,10 @@ Content-Type: application/json
      - → `curl -s localhost:8080/actuator/health`가 `UP`일 때까지 대기
      - 최대 90초
    - 기동 실패 → `build/bootrun.log` 마지막 부분과 함께 🛑 멈춤
-3. **요청 재연 · 대조**: `python3 scripts/run_http.py http/{name}.http`
-   - 요청을 파일 순서대로 보내고 `@uses` 치환, 상태코드 · `$.필드` · `@db`를 대조해 표로 출력한다
-   - 불일치가 있으면 종료 코드 1, "불일치" 절에 기대 · 실제가 나온다
-   - DB 접속 기본값은 `inventory-system-postgres` / `inventory-system`이다 — 바꿨으면 `PG_CONTAINER` · `PG_USER` · `PG_PASSWORD` · `PG_DATABASE`로 넘긴다
+3. **요청 재연과 대조**: `python3 scripts/run_http.py http/{name}.http`
+   - 요청을 파일 순서대로 보내고 `@uses` 치환, 상태코드, `$.필드`, `@db`를 대조해 표로 출력한다
+   - 불일치가 있으면 종료 코드 1, "불일치" 절에 기대와 실제가 나온다
+   - DB 접속 기본값은 `inventory-system-postgres` / `inventory-system`이다 — 바꿨으면 `PG_CONTAINER`, `PG_USER`, `PG_PASSWORD`, `PG_DATABASE`로 넘긴다
    - 멀티파트 요청은 스크립트가 지원하지 않는다 → `curl -F 'files=@http/sample/파일'`로 따로 보내 대조한다
 4. **로그 확인**
    - `build/bootrun.log`에 `ERROR`가 새로 찍혔는지 확인한다

@@ -1,7 +1,8 @@
 # 출고 API 실측 (F4)
-# 실행: 서버를 띄운 뒤 python3 scripts/run_http.py http/outbound.http
-# 순서 의존: 위에서 아래로. 준비 입고로 OUT-A001(100) · OUT-C001(10)을 만든 뒤 출고한다
-# 매번 빈 DB에서 시작한다 (docker compose down -v && docker compose up -d)
+# 서버: docker compose up -d && ./gradlew bootRun
+# 실행: python3 scripts/run_http.py http/outbound.http (IntelliJ HTTP Client로도 실행할 수 있다)
+# 순서 의존: 위에서 아래로. 준비 입고로 OUT-A001(100)과 OUT-C001(10)을 만든 뒤 출고한다
+# 빈 DB에서 시작한다 (docker compose down -v && docker compose up -d). 세 파일은 상품코드 접두어(IN-, Q-, OUT-)가 달라 같은 DB에서 이어서 돌려도 된다
 
 @host = http://localhost:8080
 
@@ -139,3 +140,13 @@ POST {{host}}/api/v1/inventory/outbound
 Content-Type: application/json
 
 { "productCode": "OUT-A001", "quantity": 5 }
+
+### [04 §2] Accept가 JSON을 받지 않으면 처리 전에 406, 재고 그대로
+# @expect 406
+# @db SELECT i.quantity FROM inventory i JOIN product p ON p.id = i.product_id JOIN tenant t ON t.id = p.tenant_id WHERE t.code = 'tenant-001' AND p.product_code = 'OUT-A001' => 70
+POST {{host}}/api/v1/inventory/outbound
+X-Tenant-Id: tenant-001
+Content-Type: application/json
+Accept: text/plain
+
+{ "productCode": "OUT-A001", "quantity": 1 }

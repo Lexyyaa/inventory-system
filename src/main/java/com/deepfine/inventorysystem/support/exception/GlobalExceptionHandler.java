@@ -16,8 +16,6 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
-import org.springframework.web.multipart.MultipartException;
-import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
@@ -42,8 +40,7 @@ public class GlobalExceptionHandler {
         MethodArgumentNotValidException.class,
         HandlerMethodValidationException.class,
         ConstraintViolationException.class,
-        ServletRequestBindingException.class,
-        MissingServletRequestPartException.class
+        ServletRequestBindingException.class
     })
     public ResponseEntity<ErrorResponse> handleInvalidRequest(Exception e) {
         log.info("요청 검증 실패: {}", e.getMessage());
@@ -53,8 +50,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler({
         HttpMessageNotReadableException.class,
         MethodArgumentTypeMismatchException.class,
-        HttpMediaTypeNotSupportedException.class,
-        MultipartException.class
+        HttpMediaTypeNotSupportedException.class
     })
     public ResponseEntity<ErrorResponse> handleMalformedRequest(Exception e) {
         log.info("요청 형식 오류: {}", e.getMessage());

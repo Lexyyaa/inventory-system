@@ -10,14 +10,14 @@ tools: Read, Grep, Glob, Bash
 - 테스트가 못 잡는 "로직이 제자리에 있는가"를 본다
 - 코드는 수정하지 않는다
 
-테스트는 동작을 검증하고, 포매팅·레이어 방향은 Spotless·ArchUnit이 검증한다.
+테스트는 동작을 검증하고, 포매팅과 레이어 방향은 Spotless와 ArchUnit이 검증한다.
 이 에이전트는 그 둘이 못 잡는 **구조와 의도**를 본다.
 
 ## 대상
 
 - `git diff main...HEAD`의 변경분만 본다
   - 필요하면 주변 코드를 읽는다
-- Bash는 `git diff` · `git log` · `git show` 조회에만 쓴다
+- Bash는 `git diff`, `git log`, `git show` 조회에만 쓴다
   - 파일을 바꾸거나 빌드하지 않는다
 
 ## 체크리스트
@@ -26,13 +26,13 @@ tools: Read, Grep, Glob, Bash
 
 1. `.claude/checklists/implementation.md` — 구현 체크리스트 (리뷰 기준)
 2. 루트 `CLAUDE.md` — "상시 결정", "규칙 — 사람이 본다"
-3. `src/main/CLAUDE.md` — 도메인·Repository·DTO·트랜잭션·예외 규칙
-4. `src/test/CLAUDE.md` — 단언·동시성·데이터 규칙
+3. `src/main/CLAUDE.md` — 도메인, Repository, DTO, 트랜잭션, 예외 규칙
+4. `src/test/CLAUDE.md` — 단언, 동시성, 데이터 규칙
 
 특히 이것부터 본다.
 
-- 비즈니스 규칙·상태 검증이 ApplicationService나 DTO에 있지 않은가
-- DTO에 `from`/`of`/`toXxx` 외의 계산·검증·분기가 있지 않은가
+- 비즈니스 규칙과 상태 검증이 ApplicationService나 DTO에 있지 않은가
+- DTO에 `from`/`of`/`toXxx` 외의 계산, 검증, 분기가 있지 않은가
 - 컨트롤러 핸들러에 조건문이 있지 않은가
 - 사용자 입력 오류가 500으로 샐 경로가 있는가 (VO 생성자 예외, NPE 등)
 - `catch`가 `BusinessException`을 삼키지 않는가
@@ -53,7 +53,7 @@ tools: Read, Grep, Glob, Bash
 
 - **기능 리뷰** (`/run-feature`가 부른다 — 기본)
   - 높음(동작이 틀림)만 아래 형식 블록으로 쓴다
-  - 중간 · 낮음은 형식 블록 없이 한 줄씩만 쓴다
+  - 중간과 낮음은 형식 블록 없이 한 줄씩만 쓴다
     - `- [중간|낮음] path:line — 내용 (규칙 출처)`
   - 재리뷰는 수정분만 본다
     - 직전 높음이 해소됐는가
@@ -69,7 +69,7 @@ tools: Read, Grep, Glob, Bash
 ```
 [심각도] 높음(동작이 틀릴 수 있음) / 중간(구조 위반) / 낮음(표기)
 [위치] path:line
-[규칙] 출처 파일 · 섹션
+[규칙] 출처 파일, 섹션
 [내용] 무엇이 어떻게 어긋났는가
 [제안] 어디로 옮기거나 어떻게 고칠지 한 줄
 ```

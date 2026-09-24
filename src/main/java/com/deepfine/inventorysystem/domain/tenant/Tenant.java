@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 /**
  * 업체 <br>
  * - 요청 헤더 X-Tenant-Id의 값이 code다 <br>
- * - seed(data.sql)로만 등록해서 생성 · 변경 메서드를 두지 않는다 <br>
+ * - seed(data.sql)로만 등록해서 생성/변경 메서드를 두지 않는다 <br>
  */
 @Entity
 @Table(name = "tenant")

@@ -7,6 +7,7 @@ import com.deepfine.inventorysystem.application.inventory.InventoryCommand;
 import com.deepfine.inventorysystem.application.inventory.InventoryInfo;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,10 +18,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * 재고 API <br>
- * - 매핑에 consumes · produces를 두지 않는다. Content-Type 오류가 업체 확인보다 먼저 나지 않게 하려는 것이다 <br>
+ * - consumes는 두지 않는다. Content-Type 오류가 업체 확인보다 먼저 나지 않게 하려는 것이다 <br>
+ * - produces는 JSON으로 둔다. Accept가 JSON을 받지 않으면 처리 전에 406으로 끝나 재고가 바뀌지 않는다 <br>
  */
 @RestController
-@RequestMapping("/inventory")
+@RequestMapping(value = "/inventory", produces = MediaType.APPLICATION_JSON_VALUE)
 @RequiredArgsConstructor
 public class InventoryController implements InventoryApiDocs {
 

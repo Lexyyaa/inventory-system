@@ -16,7 +16,7 @@ public final class InventoryRequest {
     @Schema(name = "InboundRequest", description = "입고 요청")
     public record Inbound(
             @Schema(
-                    description = "상품 코드 (영문 · 숫자 · _ · -, 1~100자, 대소문자 구분)",
+                    description = "상품 코드 (영문/숫자/_/-, 1~100자, 대소문자 구분)",
                     example = "A001",
                     requiredMode = Schema.RequiredMode.REQUIRED)
             @NotBlank
@@ -27,6 +27,7 @@ public final class InventoryRequest {
             @Schema(
                     description = "상품명 (1~255자). 기존 상품이면 등록된 상품명과 같아야 한다",
                     example = "Apple",
+                    maxLength = 255,
                     requiredMode = Schema.RequiredMode.REQUIRED)
             @NotBlank
             @CodePointLength(max = 255)
@@ -48,7 +49,7 @@ public final class InventoryRequest {
     @Schema(name = "OutboundRequest", description = "출고 요청")
     public record Outbound(
             @Schema(
-                    description = "상품 코드 (영문 · 숫자 · _ · -, 1~100자, 대소문자 구분)",
+                    description = "상품 코드 (영문/숫자/_/-, 1~100자, 대소문자 구분)",
                     example = "A001",
                     requiredMode = Schema.RequiredMode.REQUIRED)
             @NotBlank
