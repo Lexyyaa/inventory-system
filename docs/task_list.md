@@ -8,7 +8,7 @@
 > - TC: [05](design/05-test-cases.md)
 >
 
-**현재:** F4 / T4-5
+**현재:** F4 / T4-6
 
 ## 규칙
 
@@ -89,7 +89,7 @@
 - [x] T4-2 `feat: 출고 API 구현` — POST /api/v1/inventory/outbound · ApiDocs
 - [x] T4-3 `test: 출고 성공·실패 케이스` — TC-4-01 ~ TC-4-04
 - [x] T4-4 `test: 출고 엣지 케이스` — TC-4-05 ~ TC-4-06, TC-4-10
-- [ ] T4-5 `test: 출고 동시성` — TC-4-07 ~ TC-4-09
+- [x] T4-5 `test: 출고 동시성` — TC-4-07 ~ TC-4-09
 - [ ] T4-6 `test: F4 .http 실행 케이스`
 - [ ] T4-7 `docs: F4 작업 로그`
 
