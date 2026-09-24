@@ -83,7 +83,7 @@
 - [x] T2-13 `chore: 쓰지 않는 TransactionRunner 삭제`
 - [x] T2-14 `style: 주석 정리` — OpenApiConfig 제목 · 버전만
 - [x] T2-15 `docs: 코드 리뷰 합의 규칙 반영` — CLAUDE.md 3개 · 체크리스트 · 03 시각 컬럼
-- [ ] T2-16 `docs: F2 코드 리뷰 작업 로그`
+- [x] T2-16 `docs: F2 코드 리뷰 작업 로그`
 
 ## F3. 조회 `feature/query` — TC-3-01 ~ TC-3-04
 

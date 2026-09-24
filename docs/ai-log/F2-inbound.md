@@ -13,7 +13,6 @@
 ## 작업 흐름
 
 1. implementer 구현
-   - 소요: 약 20분
    - 중간 멈춤 없음
    - T2-1 `65775e7` `feat: 상품·재고 엔티티 구현`
    - T2-2 `5245d9a` `feat: 상품 생성 및 재고 증가 원자 쿼리 구현`
@@ -290,3 +289,28 @@
   - 인프라 projection으로 받아 변환한다
 - 대상: `.claude/checklists/implementation.md`
 - 반영: 사용자 위임으로 F2 리뷰 반영에 넣음
+
+---
+
+## 사용자 코드 리뷰
+
+- 웹 계층 정리
+  - 인터셉터 · 컨트롤러를 `presentation/interceptor` · `presentation/controller`로 나눔
+  - 웹 설정을 `support/config/WebConfig`로 옮기고 `/api/v1`을 한 곳에서 붙임
+  - ArgumentResolver 삭제 → `@RequestAttribute`
+- 입고를 도메인 서비스(`ProductService` · `InventoryService`)로 나눔
+  - ApplicationService는 조합과 트랜잭션만
+  - 컨트롤러는 `toCommand` → 서비스 → `Response.from` 세 줄
+- 재고 변경 결과를 `InventoryState(Instant)` 하나로 받음 (`InventorySnapshot` · `ChangedRow` 삭제)
+- 모든 테이블에 `created_at` · `updated_at`, 매핑 전용 `BaseTimeEntity`
+- 쓰지 않는 코드 삭제
+  - `TransactionRunner`
+  - `Product` 생성자의 null 검사
+  - 생성자와 같은 정적 팩토리
+- 주석 정리: 기본 없음, 필요한 "왜"만 짧게
+- 원자 SQL(`ON CONFLICT` · UPSERT)은 그대로 둠
+- 합의 내용을 규칙 문서(`CLAUDE.md` 3개 · 체크리스트)와 03에 반영
+- 확인
+  - 테스트 41개 통과
+  - `.http` 10건 일치
+  - 합의 누락 · 회귀 리뷰에서 코드 결함 0건 (규칙 문서 문구 2건 수정)

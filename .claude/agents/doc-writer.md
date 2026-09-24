@@ -58,6 +58,8 @@ tools: Read, Write, Edit, Grep, Glob
 - `docs/ai-log/F{번호}-{name}.md`
   - `_template.md` 형식
   - 메인 세션이 넘겨준 구현 보고를 옮긴다
+  - 소요 시간은 적지 않는다
+  - 한 일은 결과만 짧은 불릿으로 쓴다. "추천안으로 적용했다" 같은 진행 경위 문구는 쓰지 않는다
 
 ## 규칙
 
