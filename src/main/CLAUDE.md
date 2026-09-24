@@ -140,7 +140,7 @@ com.deepfine.inventorysystem
 - 원자 SQL 전에 읽어 둔 재고 값(quantity · updated_at)을 응답에 쓰지 않는다. 상품코드 · 상품명은 먼저 읽은 Product 값을 쓴다 (상품명은 바뀌지 않는다)
 - Tenant 확인은 `presentation/interceptor/TenantInterceptor.preHandle`(`API_PREFIX + "/**"`)에서 한다
   - Filter · `@RequestHeader` 안에서 확인하지 않는다 (본문 해석보다 늦거나 에러 형식이 달라진다)
-  - 인터셉터는 application의 Tenant 서비스를 부르고, `INVALID_TENANT` 예외는 그 서비스가 던진다
+  - 인터셉터는 `TenantApplicationService`를 부르고, `INVALID_TENANT` 예외는 도메인의 `TenantService`가 던진다
   - 확인된 id는 request attribute(`TENANT_ID`)에 넣는다
   - 컨트롤러는 `@RequestAttribute(TENANT_ID) Long tenantId`로 받는다. ArgumentResolver는 만들지 않는다
   - 서비스에는 확인된 `tenantId`를 Command에 담아 넘긴다

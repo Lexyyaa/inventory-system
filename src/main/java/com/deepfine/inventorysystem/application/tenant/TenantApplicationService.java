@@ -1,8 +1,6 @@
 package com.deepfine.inventorysystem.application.tenant;
 
-import com.deepfine.inventorysystem.domain.exception.ErrorCode;
-import com.deepfine.inventorysystem.domain.tenant.TenantRepository;
-import com.deepfine.inventorysystem.domain.tenant.exception.TenantException;
+import com.deepfine.inventorysystem.domain.tenant.TenantService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -11,13 +9,10 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class TenantApplicationService {
 
-    private final TenantRepository tenantRepository;
+    private final TenantService tenantService;
 
     @Transactional(readOnly = true)
     public Long getTenantId(String tenantCode) {
-        if (tenantCode == null || tenantCode.isBlank()) {
-            throw new TenantException(ErrorCode.INVALID_TENANT);
-        }
-        return tenantRepository.getByCode(tenantCode).getId();
+        return tenantService.getId(tenantCode);
     }
 }
