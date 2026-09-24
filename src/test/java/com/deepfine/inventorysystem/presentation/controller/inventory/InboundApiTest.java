@@ -27,7 +27,6 @@ class InboundApiTest {
 
     private static final String INBOUND_URL = "/api/v1/inventory/inbound";
 
-    // 04 §3 "오류 응답" 문구
     private static final String INVALID_QUANTITY_MESSAGE = "입고 수량이 허용 범위를 벗어났습니다.";
     private static final String MISSING_MESSAGE = "필수 요청 정보가 누락되었습니다.";
     private static final String MALFORMED_MESSAGE = "요청 형식이 올바르지 않습니다.";
@@ -246,7 +245,6 @@ class InboundApiTest {
         assertThat(db.productNames("tenant-001", "A001")).isEmpty();
     }
 
-    // 05에 없는 케이스 (TC 추가 제안): 수량 범위의 양 끝 값은 받는다
     @Test
     @DisplayName("입고 수량이 하한 1이나 상한 1,000,000,000과 같으면 받는다")
     void acceptsQuantityAtBothBounds() throws Exception {
@@ -269,7 +267,6 @@ class InboundApiTest {
         assertThat(db.inventoryQuantities("tenant-001", "B001")).containsExactly(1_000_000_000L);
     }
 
-    // 05에 없는 케이스 (TC 추가 제안): 상품명 길이는 DB VARCHAR(255)와 같게 문자(코드포인트) 단위로 센다
     @Test
     @DisplayName("이모지처럼 UTF-16 두 단위인 문자 255자 상품명은 받고, 256자는 INVALID_REQUEST로 거부한다")
     void countsProductNameLengthByCharacter() throws Exception {
@@ -299,7 +296,6 @@ class InboundApiTest {
         assertThat(db.productNames("tenant-001", "B001")).isEmpty();
     }
 
-    // 05에 없는 케이스 (TC 추가 제안): PostgreSQL 문자열에 저장할 수 없는 상품명은 DB까지 가지 않고 400이다
     @Test
     @DisplayName("상품명에 NUL 문자나 짝 없는 서로게이트가 있으면 500이 아니라 INVALID_REQUEST로 거부하고 상품을 만들지 않는다")
     void rejectsProductNameNotStorableInDatabase() throws Exception {
@@ -318,7 +314,6 @@ class InboundApiTest {
         assertThat(db.productNames("tenant-001", "A001")).isEmpty();
     }
 
-    /** tenantCode가 null이면 X-Tenant-Id 헤더를 넣지 않는다. */
     private ResultActions inbound(String tenantCode, String body) throws Exception {
         MockHttpServletRequestBuilder request =
                 post(INBOUND_URL).contentType(MediaType.APPLICATION_JSON).content(body);
@@ -339,7 +334,6 @@ class InboundApiTest {
                 .andExpect(jsonPath("$.message").value(message));
     }
 
-    /** 성공 응답의 updatedAt은 +09:00 오프셋이 붙은 ISO-8601이다 (05 머리말). */
     private static void expectSeoulOffset(ResultActions result) throws Exception {
         String body = result.andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
         String updatedAt = JsonPath.read(body, "$.updatedAt");

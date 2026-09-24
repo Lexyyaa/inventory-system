@@ -8,14 +8,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 import java.util.stream.IntStream;
 
-/**
- * 같은 작업을 N개 스레드에서 동시에 출발시키고 각 결과(성공 값 또는 예외)를 모은다.
- * <pre>
- * List&lt;Result&lt;Long&gt;&gt; results = ConcurrencyRunner.run(10, i -&gt; service.place(command));
- * assertThat(ConcurrencyRunner.successCount(results)).isEqualTo(1);
- * // 결과는 반드시 DB에서 다시 읽어 확인한다
- * </pre>
- */
 public final class ConcurrencyRunner {
 
     private static final long TIMEOUT_SECONDS = 30;

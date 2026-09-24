@@ -26,10 +26,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
-/**
- * 입고 동시성. 스레드마다 MockMvc로 요청하고 응답 상태코드로 성공 · 실패를 센 뒤 DB로 다시 읽는다.
- * 트랜잭션 롤백을 쓸 수 없으므로 만든 데이터는 테스트 전후에 직접 지운다.
- */
 @IntegrationTest
 class InboundConcurrencyTest {
 
@@ -79,7 +75,6 @@ class InboundConcurrencyTest {
         assertThat(steps(100L, quantities)).containsExactlyInAnyOrder(10L, 20L, 30L);
         assertThat(db.productNames("tenant-001", "A001")).containsExactly("Apple");
         assertThat(db.inventoryQuantities("tenant-001", "A001")).containsExactly(160L);
-        // 판정 식: 최종 재고 = 초기 재고 + 성공한 입고 수량의 합 − 성공한 출고 수량의 합
         long successInbound = successQuantitySum(responses, requestQuantities);
         assertThat(db.inventoryQuantities("tenant-001", "A001")).containsExactly(100L + successInbound - 0L);
         assertThat(successInbound).isEqualTo(10L + 20L + 30L);
@@ -110,7 +105,6 @@ class InboundConcurrencyTest {
         assertThat(steps(0L, quantities)).containsExactlyInAnyOrder(10L, 20L, 30L);
         assertThat(db.productNames("tenant-001", "A001")).containsExactly("Apple");
         assertThat(db.inventoryQuantities("tenant-001", "A001")).containsExactly(60L);
-        // 판정 식: 최종 재고 = 초기 재고 + 성공한 입고 수량의 합 − 성공한 출고 수량의 합
         long successInbound = successQuantitySum(responses, requestQuantities);
         assertThat(db.inventoryQuantities("tenant-001", "A001")).containsExactly(0L + successInbound - 0L);
         assertThat(successInbound).isEqualTo(10L + 20L + 30L);
@@ -143,7 +137,6 @@ class InboundConcurrencyTest {
                 .isEqualTo("PRODUCT_NAME_MISMATCH");
         assertThat(db.productNames("tenant-001", "A001")).containsExactly(winnerName);
         assertThat(db.inventoryQuantities("tenant-001", "A001")).containsExactly(winnerQuantity);
-        // 판정 식: 최종 재고 = 초기 재고 + 성공한 입고 수량의 합 − 성공한 출고 수량의 합
         long successInbound = successQuantitySum(responses, requestQuantities);
         assertThat(db.inventoryQuantities("tenant-001", "A001")).containsExactly(0L + successInbound - 0L);
     }
@@ -156,7 +149,6 @@ class InboundConcurrencyTest {
                 .andReturn();
     }
 
-    /** MockMvc 호출 자체는 예외 없이 끝나야 한다. 성공 · 실패는 응답 상태코드로 센다. */
     private static List<MvcResult> completed(List<ConcurrencyRunner.Result<MvcResult>> results) {
         assertThat(ConcurrencyRunner.errors(results)).isEmpty();
         return results.stream().map(ConcurrencyRunner.Result::value).toList();
@@ -199,7 +191,6 @@ class InboundConcurrencyTest {
         return responses.stream().map(InboundConcurrencyTest::quantity).sorted().toList();
     }
 
-    /** 초기 재고부터 정렬된 응답 수량까지 이웃한 값의 차이. 각 요청이 한 번씩 반영됐다면 요청 수량의 한 순열이다. */
     private static List<Long> steps(long initial, List<Long> sortedQuantities) {
         List<Long> steps = new ArrayList<>();
         long previous = initial;

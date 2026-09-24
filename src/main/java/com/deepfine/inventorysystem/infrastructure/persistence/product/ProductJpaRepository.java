@@ -11,9 +11,9 @@ public interface ProductJpaRepository extends JpaRepository<Product, Long> {
     Optional<Product> findByTenantIdAndProductCode(Long tenantId, String productCode);
 
     /**
-     * 03 §9의 상품 생성 SQL. 새로 만들었으면 id를, 이미 있어 아무것도 하지 않았으면 빈 값을 돌려준다.
-     * 중복 예외를 내지 않으므로 트랜잭션이 오류 상태가 되지 않고 이어서 다시 조회할 수 있다.
-     * {@code RETURNING}이 필요해 {@code @Modifying}을 붙이지 않는다.
+     * 상품 생성 시도 <br>
+     * - 중복이면 예외 없이 넘어가서 같은 트랜잭션에서 이어서 조회할 수 있다 <br>
+     * - RETURNING 결과를 받아야 해서 @Modifying을 붙이지 않는다 <br>
      */
     @Query(value = """
             INSERT INTO product (tenant_id, product_code, name, created_at)

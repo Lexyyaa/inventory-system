@@ -12,7 +12,6 @@ public final class InventoryResponse {
 
     private static final ZoneId RESPONSE_ZONE = ZoneId.of("Asia/Seoul");
 
-    /** 입고 응답 (04 §3). 내부 식별자는 담지 않는다. */
     @Schema(name = "InboundResponse", description = "입고 결과")
     public record Inbound(
             @Schema(description = "상품 코드", example = "A001") String productCode,

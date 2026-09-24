@@ -15,10 +15,6 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.JdbcTemplate;
 
-/**
- * schema.sql의 UNIQUE · CHECK 제약을 API 없이 DB에 직접 저장해 확인한다.
- * 테스트 메서드에 트랜잭션을 걸지 않는다. JdbcTemplate이 문장마다 커밋하므로 제약 위반 뒤에도 다음 문장과 확인 조회가 실행된다.
- */
 @IntegrationTest
 class SchemaConstraintTest {
 

@@ -26,10 +26,6 @@ import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
-/**
- * 입고 원자성(TC-2-10). 재고 반영 단계에 예외를 주입해야 해서 이 클래스만 {@code @MockitoSpyBean}을 쓴다.
- * 구성이 달라 컨텍스트가 따로 뜨므로 다른 입고 테스트와 클래스를 나눈다.
- */
 @IntegrationTest
 class InboundRollbackTest {
 
@@ -68,7 +64,6 @@ class InboundRollbackTest {
         result.andExpect(status().isInternalServerError())
                 .andExpect(jsonPath("$.code").value("INTERNAL_SERVER_ERROR"))
                 .andExpect(jsonPath("$.message").value(not(containsString("injected"))));
-        // 상품 INSERT는 정상 실행되어 id가 생긴 뒤 재고 반영에서 실패했다
         ArgumentCaptor<Long> productId = ArgumentCaptor.forClass(Long.class);
         verify(inventoryRepository).increase(productId.capture(), eq(10L));
         assertThat(productId.getValue()).isNotNull();

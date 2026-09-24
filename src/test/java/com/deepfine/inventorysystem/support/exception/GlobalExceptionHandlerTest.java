@@ -28,12 +28,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 
-/**
- * 예외 → 응답 매핑 검증. DB 없이 standalone MockMvc로 돈다.
- */
 class GlobalExceptionHandlerTest {
 
-    // 04 §3 · §4 "오류 응답"의 INVALID_REQUEST 문구
     private static final String MISSING_MESSAGE = "필수 요청 정보가 누락되었습니다.";
     private static final String MALFORMED_MESSAGE = "요청 형식이 올바르지 않습니다.";
 

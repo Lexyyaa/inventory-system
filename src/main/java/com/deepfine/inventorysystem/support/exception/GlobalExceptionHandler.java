@@ -21,17 +21,6 @@ import org.springframework.web.multipart.support.MissingServletRequestPartExcept
 import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
-/**
- * 모든 예외를 ErrorResponse({ code, message })로 바꾸는 단일 지점. 문구는 docs/design/04-api-spec.md §3~§5를 따른다.
- * <ul>
- *   <li>BusinessException → ErrorCode의 HTTP 상태와 코드. 5xx는 error, 4xx는 info 로그
- *   <li>Bean Validation 위반 · 필수 헤더/파라미터 누락 → 400 INVALID_REQUEST "필수 요청 정보가 누락되었습니다."
- *   <li>역직렬화 실패(깨진 JSON · 정수가 아닌 수량) · 타입 불일치 · 지원하지 않는 Content-Type
- *       → 400 INVALID_REQUEST "요청 형식이 올바르지 않습니다."
- *   <li>매핑되지 않은 경로 → 404 RESOURCE_NOT_FOUND, 지원하지 않는 메서드 → 405 METHOD_NOT_ALLOWED
- *   <li>그 외 → 500 INTERNAL_SERVER_ERROR. 내부 메시지는 노출하지 않는다 (입력 오류가 여기로 오면 버그다)
- * </ul>
- */
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -77,7 +66,10 @@ public class GlobalExceptionHandler {
         return respond(ErrorCode.RESOURCE_NOT_FOUND);
     }
 
-    /** 클라이언트가 JSON을 받지 않겠다고 한 경우. 본문을 만들 수 없으므로 상태만 돌려준다. */
+    /**
+     * 406 <br>
+     * - 클라이언트가 JSON을 받지 않겠다고 해서 본문 없이 상태만 돌려준다 <br>
+     */
     @ExceptionHandler(HttpMediaTypeNotAcceptableException.class)
     public ResponseEntity<Void> handleNotAcceptable(HttpMediaTypeNotAcceptableException e) {
         return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).build();

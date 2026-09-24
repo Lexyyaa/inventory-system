@@ -13,9 +13,6 @@ import org.springframework.stereotype.Repository;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-/**
- * CLAUDE.md의 "도구가 검증한다" 규칙. 규칙을 바꾸려면 문서가 아니라 여기를 고친다.
- */
 @AnalyzeClasses(packages = "com.deepfine.inventorysystem", importOptions = ImportOption.DoNotIncludeTests.class)
 class ArchitectureTest {
 
@@ -25,8 +22,6 @@ class ArchitectureTest {
     private static final String INFRASTRUCTURE = "..infrastructure..";
     private static final String SUPPORT = "..support..";
 
-    // presentation → application → domain ← infrastructure
-    // support는 층 검사에서 뺀다. 어느 층과도 참조할 수 있다
     @ArchTest
     static final ArchRule 레이어_의존_방향 = layeredArchitecture()
             .consideringOnlyDependenciesInLayers()

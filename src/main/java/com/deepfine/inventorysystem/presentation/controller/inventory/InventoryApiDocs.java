@@ -12,10 +12,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
-/**
- * 재고 API의 Swagger 문서. 컨트롤러는 이 인터페이스를 구현만 하고 Swagger 애너테이션을 붙이지 않는다.
- * 오류 응답은 04의 상태 · 에러 코드 · 문구를 그대로 적는다.
- */
 @Tag(name = "재고", description = "상품 입고 · 출고 · 현재 재고 조회")
 public interface InventoryApiDocs {
 

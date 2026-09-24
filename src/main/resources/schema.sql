@@ -1,4 +1,4 @@
--- 스키마의 유일한 기준 (docs/design/03-domain-model.md §2~§5 · §7)
+-- 스키마의 유일한 기준
 -- 기동마다 실행된다. IF NOT EXISTS라 재기동해도 기존 테이블과 데이터는 그대로 남는다
 -- 테이블을 바꿨으면 로컬 DB는 `docker compose down -v` 후 다시 올린다
 

@@ -14,8 +14,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * 재고 API. 업체 확인은 TenantInterceptor가 본문 해석보다 먼저 끝낸다.
- * 매핑에 consumes · produces를 두지 않는다 (Content-Type 오류가 업체 확인보다 먼저 판정되지 않게).
+ * 재고 API <br>
+ * - 매핑에 consumes · produces를 두지 않는다. Content-Type 오류가 업체 확인보다 먼저 나지 않게 하려는 것이다 <br>
  */
 @RestController
 @RequestMapping("/inventory")

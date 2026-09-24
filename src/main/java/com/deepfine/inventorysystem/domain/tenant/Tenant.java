@@ -12,10 +12,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
- * 상품과 재고를 구분하는 업체 단위. 요청 헤더 X-Tenant-Id의 값이 {@code code}다.
- *
- * <p>업체는 기동 시 seed(data.sql)로만 등록한다. 생성 · 변경 API가 없으므로 생성 팩토리와 상태 변경 메서드를 두지 않는다.
- * {@code created_at}은 DB가 채운다.
+ * 업체 <br>
+ * - 요청 헤더 X-Tenant-Id의 값이 code다 <br>
+ * - seed(data.sql)로만 등록해서 생성 · 변경 메서드를 두지 않는다 <br>
  */
 @Entity
 @Table(name = "tenant")

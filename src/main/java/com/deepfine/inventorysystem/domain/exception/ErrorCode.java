@@ -4,17 +4,6 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 
-/**
- * 에러 코드 단일 관리. docs/design/04-api-spec.md §7과 1:1로 맞춘다.
- * 04 §7에 없는 코드는 두지 않는다. 새 코드가 필요하면 문서에 먼저 추가한다.
- *
- * <p>message는 04 §3~§5 "오류 응답"의 문구를 그대로 쓴다.
- * <ul>
- *   <li>같은 코드에 문구가 둘인 경우(INVALID_REQUEST · INVALID_QUANTITY)는 04에 먼저 나오는 문구를 기본값으로 두고,
- *       다른 문구는 호출하는 쪽이 detail로 넘긴다 ({@link BusinessException#BusinessException(ErrorCode, String)}).
- *   <li>04에 응답 문구가 없는 코드(RESOURCE_NOT_FOUND · METHOD_NOT_ALLOWED · INTERNAL_SERVER_ERROR)는 여기 문구를 쓴다.
- * </ul>
- */
 @Getter
 @RequiredArgsConstructor
 public enum ErrorCode {
