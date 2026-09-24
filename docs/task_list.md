@@ -63,7 +63,7 @@
 - [x] T1-6 `test: DB 제약 조건 검증` — TC-1-03 ~ TC-1-04
 - [x] T1-7 `docs: F1 작업 로그`
 
-## F2. 입고 `feature/inbound` — TC-2-01 ~ TC-2-13
+## F2. 입고 `feature/inbound` — TC-2-01 ~ TC-2-14
 
 - [x] T2-1 `feat: 상품·재고 엔티티 구현`
 - [x] T2-2 `feat: 상품 생성 및 재고 증가 원자 쿼리 구현`
@@ -86,6 +86,7 @@
 - [x] T2-16 `docs: F2 코드 리뷰 작업 로그`
 - [x] T2-17 `refactor: 업체 확인을 도메인 서비스로 분리` — TenantService
 - [x] T2-18 `refactor: 수량 검사를 재고 엔티티로 옮김` — repository가 필요 없는 규칙은 엔티티 · 주석 자리 규칙
+- [x] T2-19 `test: 입고 수량 도메인 단위 테스트` — TC-2-14
 
 ## F3. 조회 `feature/query` — TC-3-01 ~ TC-3-04
 
