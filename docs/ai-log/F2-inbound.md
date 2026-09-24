@@ -301,6 +301,7 @@
 - 입고를 도메인 서비스(`ProductService` · `InventoryService`)로 나눔
   - ApplicationService는 조합과 트랜잭션만
   - 컨트롤러는 `toCommand` → 서비스 → `Response.from` 세 줄
+  - 업체 확인도 `TenantService`로 나눔
 - 재고 변경 결과를 `InventoryState(Instant)` 하나로 받음 (`InventorySnapshot` · `ChangedRow` 삭제)
 - 모든 테이블에 `created_at` · `updated_at`, 매핑 전용 `BaseTimeEntity`
 - 쓰지 않는 코드 삭제
