@@ -8,4 +8,8 @@ public class InventoryException extends BusinessException {
     public InventoryException(ErrorCode errorCode) {
         super(errorCode);
     }
+
+    public InventoryException(ErrorCode errorCode, String detail) {
+        super(errorCode, detail);
+    }
 }

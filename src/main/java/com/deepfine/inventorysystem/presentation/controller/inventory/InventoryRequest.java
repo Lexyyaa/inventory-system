@@ -44,4 +44,27 @@ public final class InventoryRequest {
             return new InventoryCommand.Inbound(tenantId, productCode, productName, quantity);
         }
     }
+
+    @Schema(name = "OutboundRequest", description = "출고 요청")
+    public record Outbound(
+            @Schema(
+                    description = "상품 코드 (영문 · 숫자 · _ · -, 1~100자, 대소문자 구분)",
+                    example = "A001",
+                    requiredMode = Schema.RequiredMode.REQUIRED)
+            @NotBlank
+            @Size(max = 100)
+            @Pattern(regexp = "[A-Za-z0-9_-]+")
+            String productCode,
+
+            @Schema(
+                    description = "출고 수량 (1 ~ 1,000,000,000 정수)",
+                    example = "10",
+                    requiredMode = Schema.RequiredMode.REQUIRED)
+            @NotNull
+            Long quantity) {
+
+        public InventoryCommand.Outbound toCommand(Long tenantId) {
+            return new InventoryCommand.Outbound(tenantId, productCode, quantity);
+        }
+    }
 }

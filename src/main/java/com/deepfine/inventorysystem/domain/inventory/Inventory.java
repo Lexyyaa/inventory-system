@@ -22,6 +22,7 @@ import lombok.NoArgsConstructor;
 public class Inventory extends BaseTimeEntity {
 
     private static final long MIN_QUANTITY = 1;
+    private static final String OUTBOUND_QUANTITY_MESSAGE = "출고 수량이 허용 범위를 벗어났습니다.";
 
     @Id
     @Column(name = "product_id", nullable = false)
@@ -36,8 +37,23 @@ public class Inventory extends BaseTimeEntity {
      * - 상한은 설정값이라 호출하는 쪽이 넘긴다 <br>
      */
     public static void validateInboundQuantity(long quantity, long maxQuantity) {
-        if (quantity < MIN_QUANTITY || quantity > maxQuantity) {
+        if (isOutOfRange(quantity, maxQuantity)) {
             throw new InventoryException(ErrorCode.INVALID_QUANTITY);
         }
+    }
+
+    /**
+     * 출고 수량 검사 <br>
+     * - 상품을 조회하기 전에 검사해서 재고 인스턴스가 없어 정적 메서드로 둔다 <br>
+     * - 에러 코드의 기본 문구가 입고 문구라 출고 문구를 따로 넘긴다 <br>
+     */
+    public static void validateOutboundQuantity(long quantity, long maxQuantity) {
+        if (isOutOfRange(quantity, maxQuantity)) {
+            throw new InventoryException(ErrorCode.INVALID_QUANTITY, OUTBOUND_QUANTITY_MESSAGE);
+        }
+    }
+
+    private static boolean isOutOfRange(long quantity, long maxQuantity) {
+        return quantity < MIN_QUANTITY || quantity > maxQuantity;
     }
 }

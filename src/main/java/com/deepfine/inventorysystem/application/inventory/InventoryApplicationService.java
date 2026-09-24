@@ -31,6 +31,14 @@ public class InventoryApplicationService {
         return InventoryInfo.Inbound.of(product, changed);
     }
 
+    @Transactional
+    public InventoryInfo.Outbound outbound(InventoryCommand.Outbound command) {
+        Inventory.validateOutboundQuantity(command.quantity(), inventoryProperties.maxQuantity());
+        Product product = productService.get(command.tenantId(), command.productCode());
+        InventoryState changed = inventoryService.decrease(product.getId(), command.quantity());
+        return InventoryInfo.Outbound.of(product, changed);
+    }
+
     @Transactional(readOnly = true)
     public InventoryInfo.CurrentStock getCurrentStock(InventoryCommand.CurrentStock command) {
         Product product = productService.get(command.tenantId(), command.productCode());
