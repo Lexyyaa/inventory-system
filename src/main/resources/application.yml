@@ -20,6 +20,11 @@ spring:
         order_updates: true
   jackson:
     time-zone: Asia/Seoul
+    # 수량은 JSON 정수만 받는다. 소수(1.5) → 정수, 문자열("10") → 숫자 강제 변환을 끈다 (실패하면 400 INVALID_REQUEST)
+    deserialization:
+      accept-float-as-int: false
+    mapper:
+      allow-coercion-of-scalars: false
   sql:
     init:
       # schema.sql(CREATE TABLE IF NOT EXISTS)과 data.sql(INSERT ... ON CONFLICT DO NOTHING)을 기동마다 실행한다

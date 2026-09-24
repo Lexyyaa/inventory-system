@@ -7,7 +7,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
-import org.springframework.validation.FieldError;
 import org.springframework.web.HttpMediaTypeNotAcceptableException;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
@@ -23,14 +22,21 @@ import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 /**
- * 모든 예외를 ErrorResponse로 바꾸는 단일 지점.
- * - BusinessException → ErrorCode의 HTTP 상태
- * - 입력 형식 오류(프레임워크 예외) → 400 INVALID_INPUT
- * - 그 외 → 500 INTERNAL_SERVER_ERROR (입력 오류가 여기로 오면 버그다)
+ * 모든 예외를 ErrorResponse({ code, message })로 바꾸는 단일 지점. 문구는 docs/design/04-api-spec.md §3~§5를 따른다.
+ * <ul>
+ *   <li>BusinessException → ErrorCode의 HTTP 상태와 코드. 5xx는 error, 4xx는 info 로그
+ *   <li>Bean Validation 위반 · 필수 헤더/파라미터 누락 → 400 INVALID_REQUEST "필수 요청 정보가 누락되었습니다."
+ *   <li>역직렬화 실패(깨진 JSON · 정수가 아닌 수량) · 타입 불일치 · 지원하지 않는 Content-Type
+ *       → 400 INVALID_REQUEST "요청 형식이 올바르지 않습니다."
+ *   <li>매핑되지 않은 경로 → 404 RESOURCE_NOT_FOUND, 지원하지 않는 메서드 → 405 METHOD_NOT_ALLOWED
+ *   <li>그 외 → 500 INTERNAL_SERVER_ERROR. 내부 메시지는 노출하지 않는다 (입력 오류가 여기로 오면 버그다)
+ * </ul>
  */
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    private static final String MALFORMED_REQUEST_MESSAGE = "요청 형식이 올바르지 않습니다.";
 
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ErrorResponse> handleBusiness(BusinessException e) {
@@ -40,42 +46,30 @@ public class GlobalExceptionHandler {
         } else {
             log.info("비즈니스 예외: {} - {}", errorCode, e.getMessage());
         }
-        return ResponseEntity.status(errorCode.getHttpStatus()).body(ErrorResponse.of(errorCode, e.getMessage()));
-    }
-
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleNotValid(MethodArgumentNotValidException e) {
-        String detail = e.getBindingResult().getFieldErrors().stream()
-                .map(GlobalExceptionHandler::describe)
-                .findFirst()
-                .orElse(ErrorCode.INVALID_INPUT.getMessage());
-        log.info("입력값 검증 실패: {}", detail);
-        return invalidInput(detail);
-    }
-
-    @ExceptionHandler(HandlerMethodValidationException.class)
-    public ResponseEntity<ErrorResponse> handleMethodValidation(HandlerMethodValidationException e) {
-        String detail = e.getParameterValidationResults().stream()
-                .findFirst()
-                .map(result -> result.getMethodParameter().getParameterName() + ": "
-                        + result.getResolvableErrors().get(0).getDefaultMessage())
-                .orElse(ErrorCode.INVALID_INPUT.getMessage());
-        log.info("입력값 검증 실패: {}", detail);
-        return invalidInput(detail);
+        return respond(errorCode, e.getMessage());
     }
 
     @ExceptionHandler({
+        MethodArgumentNotValidException.class,
+        HandlerMethodValidationException.class,
         ConstraintViolationException.class,
         ServletRequestBindingException.class,
-        MissingServletRequestPartException.class,
-        MethodArgumentTypeMismatchException.class,
+        MissingServletRequestPartException.class
+    })
+    public ResponseEntity<ErrorResponse> handleInvalidRequest(Exception e) {
+        log.info("요청 검증 실패: {}", e.getMessage());
+        return respond(ErrorCode.INVALID_REQUEST);
+    }
+
+    @ExceptionHandler({
         HttpMessageNotReadableException.class,
+        MethodArgumentTypeMismatchException.class,
         HttpMediaTypeNotSupportedException.class,
         MultipartException.class
     })
-    public ResponseEntity<ErrorResponse> handleInvalidInput(Exception e) {
-        log.info("입력 형식 오류: {}", e.getMessage());
-        return invalidInput(ErrorCode.INVALID_INPUT.getMessage());
+    public ResponseEntity<ErrorResponse> handleMalformedRequest(Exception e) {
+        log.info("요청 형식 오류: {}", e.getMessage());
+        return respond(ErrorCode.INVALID_REQUEST, MALFORMED_REQUEST_MESSAGE);
     }
 
     @ExceptionHandler({NoResourceFoundException.class, NoHandlerFoundException.class})
@@ -100,16 +94,11 @@ public class GlobalExceptionHandler {
         return respond(ErrorCode.INTERNAL_SERVER_ERROR);
     }
 
-    private static ResponseEntity<ErrorResponse> invalidInput(String detail) {
-        return ResponseEntity.status(ErrorCode.INVALID_INPUT.getHttpStatus())
-                .body(ErrorResponse.of(ErrorCode.INVALID_INPUT, detail));
-    }
-
     private static ResponseEntity<ErrorResponse> respond(ErrorCode errorCode) {
         return ResponseEntity.status(errorCode.getHttpStatus()).body(ErrorResponse.from(errorCode));
     }
 
-    private static String describe(FieldError error) {
-        return error.getField() + ": " + error.getDefaultMessage();
+    private static ResponseEntity<ErrorResponse> respond(ErrorCode errorCode, String message) {
+        return ResponseEntity.status(errorCode.getHttpStatus()).body(ErrorResponse.of(errorCode, message));
     }
 }
