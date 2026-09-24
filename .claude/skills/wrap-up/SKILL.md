@@ -79,7 +79,7 @@ disable-model-invocation: true
 - 높음 지적
   - 문서를 고쳐야 하는 것 → `doc-writer`에게 수정안만 만들게 하고 → 🛑 멈춤: 승인받은 뒤 반영하고 `verifier`를 한 번 더 돌린다
   - 코드를 고쳐야 하는 것 → 🛑 멈춤
-    - 남은 시간과 함께 고칠지 README 한계로 남길지 묻는다
+    - 고칠지 README 한계로 남길지 묻는다
 - 중간 · 낮음 → 리뷰 백로그에 추가하고, 0-1과 같은 방식으로 처리하거나 README 한계로 남긴다
 
 ## 4. 최종 게이트
@@ -94,7 +94,7 @@ disable-model-invocation: true
 🛑 멈춤: 아래를 보고하고 결정을 받는다.
 
 ```
-## 제출 준비 완료 (누적 hh:mm / 제한 hh:mm)
+## 제출 준비 완료
 - TC: n/n 구현
 - 테스트: n개 통과
 - 제출물: n/n (코드 · schema.sql · README · .http · ai-log, 미충족 사유)
