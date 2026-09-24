@@ -47,6 +47,7 @@
 ## JPA · 스키마
 
 - [ ] native 쿼리(RETURNING · JOIN) 결과를 받는 domain record의 시각 필드는 `Instant`다 — Hibernate 6.6이 `timestamptz`를 `Instant`로 읽어 `OffsetDateTime`이면 "argument type mismatch"
+- [ ] RETURNING이 빈 결과일 수 있는 native 쿼리는 `Optional<record>`로 받는다 — 단건 타입이면 빈 결과가 null로 새서 500
 - [ ] 03 §7의 UNIQUE · CHECK · FK가 `schema.sql`에 있고 엔티티 매핑이 그와 같다 — `ddl-auto: validate`는 제약을 검사하지 않는다
 - [ ] `schema.sql`은 `CREATE TABLE IF NOT EXISTS`, `data.sql`은 `ON CONFLICT DO NOTHING`이다 — 재기동할 때 기동이 실패한다
 - [ ] `@OneToMany` 컬렉션 순서에 의존하면 `@OrderBy`가 있다 — 순서가 DB 마음대로 바뀐다
@@ -66,6 +67,7 @@
 - [ ] 실패 케이스는 예외 타입과 `ErrorCode`까지 단언한다 — 엉뚱한 예외로 실패해도 통과한다
 - [ ] 입력 오류 케이스가 500이 아니라 4xx인지 본다 — 검증 누락이 숨는다
 - [ ] DB에서 읽은 시각(UTC 오프셋)과 응답 시각(+09:00)은 `isAtSameInstantAs`로 비교한다 — `isEqualTo`는 오프셋까지 비교해 같은 시각인데 실패한다
+- [ ] 동시성 장치의 조건(`WHERE quantity >= :quantity` 등)을 빼거나 바꿔 동시성 TC가 실패하는지 한 번 돌려 본다 — 통과하면 거짓 통과
 - [ ] 동시성 테스트는 05에 적힌 스레드 수 그대로 `ConcurrencyRunner`로 돌리고, 결과를 DB나 05의 조회 API로 다시 읽는다 — 경합이 안 생겨 거짓 통과 (`ConcurrencyRunner`)
 
 ## 주석

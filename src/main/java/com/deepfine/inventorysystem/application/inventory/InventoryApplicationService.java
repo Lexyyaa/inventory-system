@@ -31,6 +31,11 @@ public class InventoryApplicationService {
         return InventoryInfo.Inbound.of(product, changed);
     }
 
+    /**
+     * 출고 <br>
+     * - 차감은 조건부 UPDATE 한 문장이라 동시 출고에도 재고가 음수가 되지 않는다 <br>
+     * - 차감 뒤 실패해도 차감까지 되돌리려고 트랜잭션 안에서 처리 <br>
+     */
     @Transactional
     public InventoryInfo.Outbound outbound(InventoryCommand.Outbound command) {
         Inventory.validateOutboundQuantity(command.quantity(), inventoryProperties.maxQuantity());
