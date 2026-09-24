@@ -1,10 +1,10 @@
 ---
 name: wrap-up
-description: F9 마무리(제출물·전체 점검·최종 게이트)를 실행한다.
+description: F5 마무리(제출물·전체 점검·최종 게이트)를 실행한다.
 disable-model-invocation: true
 ---
 
-# /wrap-up — F9 마무리
+# /wrap-up — F5 마무리
 
 - 제출물(README·AI 활용 내역·.http)을 채운다
 - 전체 추적성 점검을 돌린다
@@ -32,7 +32,8 @@ disable-model-invocation: true
 
 - task_list "리뷰 백로그" 표를 훑는다
 - **문서 쪽** 항목
-  - `doc-writer`에게 한 번에 맡긴다
+  - `doc-writer`에게 수정안을 한 번에 만들게 한다
+  - → 🛑 멈춤: 수정안을 보여주고 승인받은 뒤 반영한다
   - 커밋: `docs: 리뷰 백로그 문서 정리`
 - **코드 · 테스트 쪽** 항목
   - → 🛑 멈춤: 목록을 한 번에 보여주고 항목마다 처리 방법을 받는다
@@ -51,27 +52,32 @@ disable-model-invocation: true
 - 파일 맨 위에 사용법 주석(서버 실행 명령 · 요청 순서 의존성)을 단다
 - 커밋: `docs: .http 실행 케이스 정리`
 
+## 1-1. 사용하지 않는 파일 정리 (T5-2)
+
+- 코드에서 쓰지 않는 파일(공통 코드 · 설정 · 스크립트 · 템플릿)을 찾는다
+- → 🛑 멈춤: 지울 파일 목록을 보여주고 승인받은 뒤 삭제한다
+- 게이트(`./gradlew spotlessApply build`)를 통과시킨다
+- 커밋: `chore: 사용하지 않는 파일 정리`
+
 ## 2. 제출물 작성
 
 - `doc-writer`를 호출한다
   - 지시:
-    - "`02` §4의 모든 SUB 항목을 채워 README를 제출용으로 다시 쓴다."
+    - "task_list T5-3 괄호의 항목과 task_list '결정 필요 / 보류'의 'README에 쓸 것'을 빠짐없이 채워 README를 쓴다. 구현 범위는 02 §1, DDL 위치는 src/main/resources/schema.sql이다."
     - "AI 활용 내역은 `docs/ai-log/README.md`에 쓴다. 기능별 ai-log를 요약한다."
     - "미구현·보류 항목은 README의 한계 절에 사유와 함께 적는다"
-- `OpenApiConfig`의 TODO(제목·설명)가 남았으면 채운다
-  - 커밋: `chore: OpenAPI 제목·설명 작성`
-- `02` §4 SUB 표의 완료 칸을 체크한다
-- 커밋 (각 커밋에 task_list T9-x 체크를 넣는다)
-  - `docs: README 작성 (실행 방법·기술 스택 및 선택 이유·API)`
+- 제출물(코드 · `schema.sql` · README)이 모두 있는지 확인한다
+- 커밋 (각 커밋에 task_list T5-x 체크를 넣는다)
+  - `docs: README 작성 (실행 방법 · 기술 스택과 선택 이유 · 설계 결정 · API · DDL 위치 · 한계와 확장 방향)`
   - `docs: AI 활용 내역 정리`
 
 ## 3. 전체 점검
 
 - 아래 둘을 **동시에** 호출한다
   - `reviewer` — **전체 리뷰 모드**, 대상 `git diff <첫 커밋>..HEAD` 전체 (기능 리뷰에서 백로그로 보낸 항목은 다시 지적하지 않는다)
-  - `verifier` — **구현 점검 모드, 대상 전체 + SUB**
+  - `verifier` — **구현 점검 모드, 대상 전체 + 제출물**
 - 높음 지적
-  - 문서만 고치면 되는 것 → `doc-writer`로 고치고 `verifier`를 한 번 더 돌린다
+  - 문서를 고쳐야 하는 것 → `doc-writer`에게 수정안만 만들게 하고 → 🛑 멈춤: 승인받은 뒤 반영하고 `verifier`를 한 번 더 돌린다
   - 코드를 고쳐야 하는 것 → 🛑 멈춤
     - 남은 시간과 함께 고칠지 README 한계로 남길지 묻는다
 - 중간 · 낮음 → 리뷰 백로그에 추가하고, 0-1과 같은 방식으로 처리하거나 README 한계로 남긴다
@@ -89,9 +95,9 @@ disable-model-invocation: true
 
 ```
 ## 제출 준비 완료 (누적 hh:mm / 제한 hh:mm)
-- 필수 FR: n/n 구현 · 선택 FR: n/n
+- TC: n/n 구현
 - 테스트: n개 통과
-- SUB: n/n 충족 (미충족 사유)
+- 제출물: n/n (코드 · schema.sql · README · .http · ai-log, 미충족 사유)
 - 남긴 지적 · 한계: …
 
 PR을 올릴까요? (push → PR 생성. 머지하면 제출 상태가 됩니다)

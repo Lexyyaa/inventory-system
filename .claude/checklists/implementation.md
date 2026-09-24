@@ -22,42 +22,33 @@
 - [ ] "무시한다"고 정한 입력 필드에 Bean Validation이 남아 있지 않다 — 무시될 값 때문에 400
 - [ ] `Info` · `Command`에 domain Enum · VO · 엔티티를 담지 않는다 — presentation이 domain을 참조해 ArchUnit 실패 (`name()` · 원시값으로 푼다)
 - [ ] `catch (RuntimeException | Exception)`이 `BusinessException`을 삼키지 않는다 — 원래 에러 코드 대신 엉뚱한 응답
-- [ ] 검사 순서가 04 API "판정 순서"와 같다 (입력 → 상태 → 한도 → 충돌) — 같은 요청에 설계와 다른 에러 코드
+- [ ] 검사 순서가 04 §2 "오류 판정 순서"와 같다 (Tenant → 형식 → 필수값·길이 → 수량 범위 → 상품 존재 → 상품·재고 상태) — 같은 요청에 설계와 다른 에러 코드
 
 ## 날짜 · 시간
 
-- [ ] 날짜 입력의 상한과 하한을 짝으로 막는다 — PostgreSQL DATE 범위 밖 값은 저장 시점에 500, 0 이하 연도는 BC로 바뀌어 한 해 어긋난다 (허용 범위 1000-01-01 ~ 9999-12-31) (`DateRules.isStorable`)
-- [ ] 날짜 계산(`plusDays` · `plusMonths`)보다 범위 검사가 먼저다 — ISO 파싱은 `+999999999-12-31`까지 받아 계산이 `DateTimeException`(500) (`DateRules.canAddDays`)
 - [ ] 하위 기간이 부모 기간 안에 있는지 검사한다 — 부모 기간 밖 하위 기간이 부모 종료일만 늘려 규칙에 없는 혜택이 생긴다
 - [ ] 부모 기간이 줄어드는 경로(해제 · 취소 · 단축)에서도 위 포함 검사를 다시 한다 — 줄어든 뒤 하위 기간이 밖으로 삐져나온다
 - [ ] 여러 날 구간의 포함 여부를 시작일이 아니라 끝 날짜까지 비교한다 — 구간 끝이 기준일을 넘는 경우를 놓친다
-- [ ] 비즈니스 판단 시각은 `BaseTimeEntity`가 아니라 별도 필드다 — 수정 시 판단 기준이 바뀐다
+- [ ] 시각 컬럼은 DB가 채운다 — 엔티티가 `BaseTimeEntity`를 상속하면 03 §7과 어긋나고 native 쿼리에 Auditing이 적용되지 않는다
 
 ## 락 · 트랜잭션 · 동시성
 
-- [ ] 락 → 검사 → 삽입에서 락 조회가 트랜잭션의 첫 쿼리다 — REPEATABLE READ 스냅샷이 락 이전에 잡혀 먼저 커밋된 행을 못 보고 중복 생성 (`TransactionRunner`)
-- [ ] 락을 두 단계로 잡을 때 정합성 근거가 첫 일반 조회보다 앞선 락이다 — 뒤의 락이 스냅샷을 새로 잡아 주지 않는다
-- [ ] `FOR UPDATE` 전에 같은 엔티티를 일반 조회로 영속성 컨텍스트에 올리지 않는다 — 잠금 조회가 1차 캐시의 옛 값을 돌려준다 (후보는 id만 조회)
-- [ ] 락은 PK 등호 조회로 잡는다 — 범위 조건 `FOR UPDATE`는 갭 락으로 다른 키의 INSERT까지 대기시킨다
-- [ ] `FOR UPDATE` 조건 컬럼에 인덱스가 있다 — 스캔한 행이 전부 잠겨 무관한 요청까지 직렬화된다
-- [ ] 새 스냅샷이 필요한 곳은 `REQUIRES_NEW`다 — 기본 전파(REQUIRED)는 바깥 트랜잭션에 합류해 옛 스냅샷을 쓴다 (`TransactionRunner`)
-- [ ] `TransactionRunner`를 호출자 트랜잭션 밖에서 부른다 — 안에서 부르면 커넥션 2개를 잡고, 같은 락을 쥐고 있으면 자기 대기로 타임아웃
 - [ ] 같은 클래스 안의 `@Transactional` 호출에 기대지 않는다 — 프록시를 안 타서 트랜잭션이 안 열린다 (`TransactionRunner`)
-- [ ] UNIQUE 충돌은 트랜잭션 밖에서 잡고 새 트랜잭션에서 재조회한다 — rollback-only 트랜잭션 안에서 조회가 실패한다
 - [ ] 파일 · 외부 I/O와 DB 커밋의 순서를 정했다 — 커밋 후 I/O가 실패하면 레코드만 남는다 (트랜잭션 안으로 옮기거나 보상)
-- [ ] 락 전략이 03 도메인 모델 §7과 같다 — 임의로 바꾸면 동시성 테스트 근거가 사라진다
+- [ ] 상품 생성 경쟁은 `INSERT … ON CONFLICT DO NOTHING RETURNING id` 후 같은 트랜잭션 재조회다 — 예외를 잡아 재조회하면 PostgreSQL이 이후 쿼리를 거부한다 (03 §9)
+- [ ] 입고는 트랜잭션 하나, 재고 변경은 원자 SQL 한 문장이다. `FOR UPDATE` · `REQUIRES_NEW` · 격리 수준 상향을 쓰지 않는다 — 상품만 남는 상태가 생긴다 (03 §14 · §15)
+- [ ] 동시성 처리가 03 §9~§15(원자 SQL · READ COMMITTED)와 같다 — 임의로 바꾸면 동시성 테스트 근거가 사라진다
 
 ## JPA · 스키마
 
-- [ ] ERD의 UNIQUE · INDEX · NOT NULL이 `@Table` · `@Column(nullable = false)`에 선언돼 있다 — 엔티티에 없으면 DB에도 없다 (`ddl-auto: update`)
-- [ ] `data.sql` INSERT에 `created_at` · `updated_at`(`NOW(6)`)이 있다 — `BaseTimeEntity` 컬럼은 NOT NULL · DEFAULT 없음이라 기동 실패
+- [ ] 03 §7의 UNIQUE · CHECK · FK가 `schema.sql`에 있고 엔티티 매핑이 그와 같다 — `ddl-auto: validate`는 제약을 검사하지 않는다
+- [ ] `schema.sql`은 `CREATE TABLE IF NOT EXISTS`, `data.sql`은 `ON CONFLICT DO NOTHING`이다 — 재기동할 때 기동이 실패한다
 - [ ] `@OneToMany` 컬렉션 순서에 의존하면 `@OrderBy`가 있다 — 순서가 DB 마음대로 바뀐다
 - [ ] `insertable = false`로 이중 매핑한 FK 필드를 저장 직후 읽지 않는다 — 메모리 값이 null (연관에서 꺼내거나 다시 조회)
 - [ ] 필요한 연관은 트랜잭션 안에서 로드한다 — `open-in-view: false`라 밖에서 `LazyInitializationException`
 
 ## 페이지 · 조회
 
-- [ ] 페이지 파라미터에 `@Min(0) @Max(PageLimits.MAX_PAGE)`, `@Min(1) @Max(PageLimits.MAX_SIZE)`가 있다 — offset이 int를 넘어 500 (`PageLimits`)
 - [ ] 조회 서비스는 `@Transactional(readOnly = true)`다 — 불필요한 flush · 쓰기 락
 - [ ] 없으면 예외인 조회는 `getByXxx`, 없는 게 정상이면 `findByXxx`다 — not-found가 null로 새서 500
 
@@ -68,4 +59,4 @@
 - [ ] 구간 경계 테스트에 2일 이상 구간이 있다 — 1일짜리만 있으면 시작일 비교 버그가 통과한다
 - [ ] 실패 케이스는 예외 타입과 `ErrorCode`까지 단언한다 — 엉뚱한 예외로 실패해도 통과한다
 - [ ] 입력 오류 케이스가 500이 아니라 4xx인지 본다 — 검증 누락이 숨는다
-- [ ] 동시성 테스트는 10스레드 이상 `ConcurrencyRunner`로 돌리고 DB에서 다시 센다 — 경합이 안 생겨 거짓 통과 (`ConcurrencyRunner`)
+- [ ] 동시성 테스트는 05에 적힌 스레드 수 그대로 `ConcurrencyRunner`로 돌리고, 결과를 DB나 05의 조회 API로 다시 읽는다 — 경합이 안 생겨 거짓 통과 (`ConcurrencyRunner`)

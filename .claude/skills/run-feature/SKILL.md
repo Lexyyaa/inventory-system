@@ -25,7 +25,7 @@ disable-model-invocation: true
   - 절차: `.claude/skills/run-feature/pull-request.md`의 "다음 스킬이 시작할 때"
 - 아래 중 하나라도 걸리면 → 🛑 멈춤: 무엇이 걸렸는지 보고한다
   - `docs/task_list.md`에 `## $ARGUMENTS.` 블록이 없다
-  - 앞 기능에 미완료(`[ ]`) 작업이 있다
+  - 바로 앞 기능(F{n-1}) 블록에 미완료(`[ ]`) 작업이 있다
   - 작업 트리에 커밋 안 된 변경이 있다
   - Docker가 꺼져 있다 (`docker info`)
 - task_list에 적힌 `feature/{name}` 브랜치로 간다
@@ -39,8 +39,8 @@ disable-model-invocation: true
 - 보고에 **멈춘 이유**가 있으면 → 🛑 멈춤: 선택지를 그대로 사용자에게 묻는다
   - 사용자가 정하면, 그 결정이 설계를 바꾸는지 판단한다
     - 바꾼다 →
-      - `01-analysis.md` §4에 `C-n`을 추가하고 §7에 결정을 기록한다
-      - `02` §5에 `D-n` 추가 · 관련 문서 수정안을 보여준다
+      - `01-analysis.md`에 `ADR-nn`을 추가해 결정을 기록한다
+      - 관련 문서(02~05 · task_list의 TC 범위) 수정안을 보여준다
       - 승인받아 반영한 뒤 커밋한다
       - `implementer`를 다시 호출한다 (완료된 T는 건너뛴다)
     - 안 바꾼다 → 결정 내용을 지시에 붙여 `implementer`를 다시 호출한다
@@ -49,13 +49,14 @@ disable-model-invocation: true
 ## 2. 리뷰 · 검증
 
 - `reviewer`(기능 리뷰 모드)와 `verifier`(기능 점검 모드, 대상 $ARGUMENTS)를 **동시에** 호출한다
+  - task_list의 이 기능 블록에 `리뷰: reviewer만`이 있으면 `verifier`는 호출하지 않는다
   - 두 모드 모두 **높음(동작이 틀림)만** 자세히 보고한다
   - 중간 · 낮음은 한 줄 목록으로만 받는다
 - 지적을 나눈다
   - **높음 (코드 · 문서 모두)**
     - 상시 결정(루트 `CLAUDE.md`)으로 풀리면
       - → 묻지 않고 `implementer`에게 수정을 맡긴다 (`fix:` 커밋)
-      - 문서 쪽이면 `doc-writer`에게 맡긴다
+      - 문서 쪽이면 수정안을 만들어 6단계 "결정이 필요한 것"에 넣는다 (`docs/design`은 승인 없이 고치지 않는다)
     - 새 결정이 필요하면
       - → 🛑 멈춤: 선택지를 묻는다
       - 받은 결정은 1단계의 "설계를 바꾼다" 절차로 반영한다
@@ -83,7 +84,7 @@ disable-model-invocation: true
      - 읽고 따른다
    - 멀티파트 요청이 있으면 `http/sample/`에 샘플 파일을 만든다
      - 같은 커밋에 넣는다
-   - 이 기능의 API마다 성공 1개 이상 · `04` Errors 표의 에러마다 1개
+   - 이 기능의 API마다 성공 1개 이상 · 그 API의 `04` "오류 응답" 절에 있는 에러 코드마다 1개 (`INTERNAL_SERVER_ERROR`는 `.http`로 재현하지 않는다)
 2. `.claude/skills/verify-http/SKILL.md`의 "순서"를 그대로 실행한다
    - 대상: `$ARGUMENTS`
 3. 불일치가 있으면
@@ -126,7 +127,7 @@ disable-model-invocation: true
 
 ## 결정이 필요한 것
 - 구현 체크리스트 추가안 (없으면 "없음")
-- TC 추가 제안은 백로그에 적었으면 여기 적지 않는다
+- TC 추가 제안(1단계에서 기록한 것): 05 추가안으로 보여주고 승인받는다 (백로그로 보내지 않는다)
 
 ## 일정
 - 남은 기능: F… (예상 hh:mm) — 시간이 부족하면 뺄 후보: …
@@ -139,4 +140,4 @@ PR을 올릴까요? (push → PR 생성. 머지는 GitHub에서 직접)
 1. 결정 받은 문서 수정 · 체크리스트 추가를 반영하고 커밋한다 (`docs: $ARGUMENTS 리뷰 반영`)
 2. `feature/{name}`의 PR을 올린다
    - 절차: `.claude/skills/run-feature/pull-request.md`
-   - 다음 명령: `/run-feature F{다음}` (마지막 기능이면 `/wrap-up`)
+   - 다음 명령: `/run-feature F{다음}` (F4 다음은 `/wrap-up` — F5는 `/run-feature` 대상이 아니다)

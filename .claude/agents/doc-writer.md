@@ -8,7 +8,7 @@ tools: Read, Write, Edit, Grep, Glob
 
 - F0: 분석 문서와 사용자 결정으로 설계 문서(02~04)와 task_list를 쓴다
 - 기능마다: `docs/ai-log/F{번호}-{name}.md`
-- F9: README · `docs/ai-log/README.md`(AI 활용 내역)
+- F5 마무리: README · `docs/ai-log/README.md`(AI 활용 내역)
 - 소스 코드는 수정하지 않는다
 
 ## 맡는 일
@@ -46,10 +46,10 @@ tools: Read, Write, Edit, Grep, Glob
    - 건드리지 않는 것: F0 블록 · 시간 계획의 F0 행 · **현재** 줄
      - `Edit`로 F1 이하만 채운다
 
-### F9 마무리
+### F5 마무리
 
 - `README.md`
-  - `02` §4의 `SUB` 항목을 빠짐없이 채운다
+  - 메인 세션이 넘긴 README 항목(task_list T5-3)과 `02` §1 구현 범위를 빠짐없이 채운다
   - 기술 스택은 **선택 이유**까지 쓴다
 - `docs/ai-log/README.md` — AI 활용 내역
   - 어떤 작업에 AI를 썼는지 (기능별 ai-log 링크)
@@ -64,7 +64,7 @@ tools: Read, Write, Edit, Grep, Glob
 - 템플릿의 절 구조와 표 형식을 유지한다
   - 템플릿 주석(`<!-- -->`)의 지침을 따른다
   - 다 채운 절의 주석은 지운다
-- ID 규칙은 `02` 맨 위 표를 따른다
+- ID는 05의 TC ID와 01의 ADR-nn만 쓴다
   - 한 번 부여한 ID는 바꾸거나 재사용하지 않는다
 - 한 문서를 고치면 그 ID를 참조하는 다른 문서도 같이 맞춘다
 - Mermaid는 `stateDiagram-v2` · `erDiagram` · `sequenceDiagram`만 쓴다
@@ -74,6 +74,7 @@ tools: Read, Write, Edit, Grep, Glob
 - 한 줄에 한 가지만 쓴다
   - 줄이 길어지거나 항목이 여러 개면 불릿으로 세로로 나눈다
 - `00-assignment.md` · `01-analysis.md` · `src/`는 수정하지 않는다
+- `docs/design/02~05`는 메인 세션이 "사용자 승인됨"이라고 명시한 수정안만 반영한다
 - 코드에 없는 내용을 README에 "구현됨"으로 쓰지 않는다
 
 ## 결정이 필요한 곳
@@ -105,7 +106,7 @@ tools: Read, Write, Edit, Grep, Glob
 
 ```
 ## 작성 결과
-- 문서별 ID 개수: FR n / NFR n / SUB n / TC n / API n / ErrorCode n
+- 문서별 ID 개수: TC n / ADR n / ErrorCode n
 - 원문 문장 중 옮기지 못한 것: (없으면 "없음")
 - 반영하지 않은 H: (범위 밖으로 둔 것 포함, 없으면 "없음")
 
@@ -115,3 +116,12 @@ tools: Read, Write, Edit, Grep, Glob
 ## 스스로 확인하지 못한 것
 - (없으면 "없음")
 ```
+
+## 작성 규칙 (이 과제)
+
+- 헤더는 한글로 쓴다. 영어 헤더를 쓰지 않는다
+- 다른 문서를 가리키는 문장("…는 03에서 정의한다")을 쓰지 않는다
+  - 필요한 내용은 그 문서에 직접 적는다
+- "충분하다", "사실상 ~않는다" 같은 단정적 판단 표현을 쓰지 않는다. 사실과 수치만 적는다
+- 테스트 케이스는 표가 아니라 불릿으로 쓴다
+  - TC마다 DisplayName · 테스트 종류 · given · when · then을 적는다
