@@ -8,7 +8,7 @@
 > - TC: [05](design/05-test-cases.md)
 >
 
-**현재:** F1 / T1-1
+**현재:** F2 / T2-1
 
 ## 규칙
 
@@ -30,7 +30,7 @@
 | 구간 | 목표 종료 | 실제 종료 |
 |---|---|---|
 | F0 설계 문서 · 점검 | +1:30 (17:00) | 16:49 |
-| F1 기초 설정 | +2:30 (18:00) | |
+| F1 기초 설정 | +2:30 (18:00) | 17:13 |
 | F2 입고 | +4:30 (20:00) | |
 | F3 조회 | +5:15 (20:45) | |
 | F4 출고 | +7:00 (22:30) | |
@@ -54,13 +54,13 @@
 
 > 리뷰: reviewer만 (verifier 생략)
 
-- [ ] T1-1 `chore: 사용하지 않는 공통 코드 제거` — BaseTimeEntity · DateRules · PageLimits와 테스트 · JpaConfig(@EnableJpaAuditing)
-- [ ] T1-2 `feat: 스키마 DDL 및 업체 seed 추가` — schema.sql(IF NOT EXISTS) · data.sql(ON CONFLICT) · ddl-auto validate · defer false · 프로파일의 ddl-auto 덮어쓰기 제거
-- [ ] T1-3 `feat: 에러 응답을 API 명세에 맞게 정비` — code 필드 · INVALID_REQUEST · 재고 에러 코드 · 검증/역직렬화 매핑 · Jackson 강제 변환 끔 · TransactionRunner 주석(이 과제의 입출고 흐름에는 쓰지 않음) · GlobalExceptionHandlerTest를 code · INVALID_REQUEST · 04 메시지로 갱신 · ErrorCode · ErrorResponse · GlobalExceptionHandler Javadoc 갱신
-- [ ] T1-4 `feat: 업체 엔티티 및 업체 헤더 해석 구현` — Tenant 엔티티 · TenantRepository(인터페이스 · Impl · JpaRepository) · Tenant ApplicationService · HandlerInterceptor
-- [ ] T1-5 `test: 업체 헤더 실패 케이스` — TC-1-01 ~ TC-1-02 (테스트 전용 엔드포인트)
-- [ ] T1-6 `test: DB 제약 조건 검증` — TC-1-03 ~ TC-1-04
-- [ ] T1-7 `docs: F1 작업 로그`
+- [x] T1-1 `chore: 사용하지 않는 공통 코드 제거` — BaseTimeEntity · DateRules · PageLimits와 테스트 · JpaConfig(@EnableJpaAuditing)
+- [x] T1-2 `feat: 스키마 DDL 및 업체 seed 추가` — schema.sql(IF NOT EXISTS) · data.sql(ON CONFLICT) · ddl-auto validate · defer false · 프로파일의 ddl-auto 덮어쓰기 제거
+- [x] T1-3 `feat: 에러 응답을 API 명세에 맞게 정비` — code 필드 · INVALID_REQUEST · 재고 에러 코드 · 검증/역직렬화 매핑 · Jackson 강제 변환 끔 · TransactionRunner 주석(이 과제의 입출고 흐름에는 쓰지 않음) · GlobalExceptionHandlerTest를 code · INVALID_REQUEST · 04 메시지로 갱신 · ErrorCode · ErrorResponse · GlobalExceptionHandler Javadoc 갱신
+- [x] T1-4 `feat: 업체 엔티티 및 업체 헤더 해석 구현` — Tenant 엔티티 · TenantRepository(인터페이스 · Impl · JpaRepository) · Tenant ApplicationService · HandlerInterceptor
+- [x] T1-5 `test: 업체 헤더 실패 케이스` — TC-1-01 ~ TC-1-02 (테스트 전용 엔드포인트)
+- [x] T1-6 `test: DB 제약 조건 검증` — TC-1-03 ~ TC-1-04
+- [x] T1-7 `docs: F1 작업 로그`
 
 ## F2. 입고 `feature/inbound` — TC-2-01 ~ TC-2-13
 
@@ -112,6 +112,8 @@
 
 | F | 출처 | 심각도 | 쪽 | 내용 | 처리 |
 |---|---|---|---|---|---|
+| F1 | reviewer | 낮음 | 코드 | `TransactionRunner` 주석의 "용도" 단락이 REPEATABLE READ 락 조회 용도를 설명한다 (이 과제는 쓰지 않음, "용도:트랜잭션" 띄어쓰기) | |
+| F1 | reviewer | 확인 | 코드 | `X-Tenant-Id`에 제어 문자(NUL)가 오면 응답 형식이 `{code, message}`인지, 500이 나는지 미확인 — `.http` 실측 때 curl로 확인 | |
 
 ---
 

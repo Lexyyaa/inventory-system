@@ -33,6 +33,10 @@ import org.springframework.web.bind.annotation.RestController;
  */
 class GlobalExceptionHandlerTest {
 
+    // 04 §3 · §4 "오류 응답"의 INVALID_REQUEST 문구
+    private static final String MISSING_MESSAGE = "필수 요청 정보가 누락되었습니다.";
+    private static final String MALFORMED_MESSAGE = "요청 형식이 올바르지 않습니다.";
+
     private MockMvc mockMvc;
 
     @BeforeEach
@@ -43,58 +47,71 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
-    @DisplayName("BusinessException은 ErrorCode의 상태와 코드로 응답한다")
+    @DisplayName("BusinessException은 ErrorCode의 상태와 code, 넘긴 detail 문구로 응답한다")
     void businessException() throws Exception {
         mockMvc.perform(get("/samples/business"))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.errorCode").value("RESOURCE_NOT_FOUND"))
+                .andExpect(jsonPath("$.code").value("PRODUCT_NOT_FOUND"))
                 .andExpect(jsonPath("$.message").value("샘플이 없습니다."));
     }
 
     @Test
-    @DisplayName("요청 본문 필드 검증에 실패하면 400 INVALID_INPUT과 필드명을 응답한다")
+    @DisplayName("detail 없이 던진 BusinessException은 ErrorCode의 04 문구로 응답한다")
+    void businessExceptionDefaultMessage() throws Exception {
+        mockMvc.perform(get("/samples/tenant"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_TENANT"))
+                .andExpect(jsonPath("$.message").value("Tenant 정보가 없거나 등록되지 않았습니다."))
+                .andExpect(jsonPath("$.errorCode").doesNotExist());
+    }
+
+    @Test
+    @DisplayName("요청 본문 필드 검증에 실패하면 400 INVALID_REQUEST와 필수 요청 정보 누락 문구로 응답한다")
     void invalidField() throws Exception {
         mockMvc.perform(post("/samples").contentType(MediaType.APPLICATION_JSON).content("""
                                 {"name": " ", "items": [{"amount": 1}]}
                                 """))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.errorCode").value("INVALID_INPUT"))
-                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.startsWith("name:")));
+                .andExpect(jsonPath("$.code").value("INVALID_REQUEST"))
+                .andExpect(jsonPath("$.message").value(MISSING_MESSAGE));
     }
 
     @Test
-    @DisplayName("리스트 요소의 필드 검증도 수행되어 음수는 500이 아니라 400으로 응답한다")
+    @DisplayName("리스트 요소의 필드 검증도 수행되어 음수는 500이 아니라 400 INVALID_REQUEST로 응답한다")
     void invalidListElement() throws Exception {
         mockMvc.perform(post("/samples").contentType(MediaType.APPLICATION_JSON).content("""
                                 {"name": "a", "items": [{"amount": -1}]}
                                 """))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.errorCode").value("INVALID_INPUT"))
-                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.startsWith("items[0].amount:")));
+                .andExpect(jsonPath("$.code").value("INVALID_REQUEST"))
+                .andExpect(jsonPath("$.message").value(MISSING_MESSAGE));
     }
 
     @Test
-    @DisplayName("본문 JSON 형식이 깨지면 400 INVALID_INPUT으로 응답한다")
+    @DisplayName("본문 JSON 형식이 깨지면 400 INVALID_REQUEST와 요청 형식 오류 문구로 응답한다")
     void malformedJson() throws Exception {
         mockMvc.perform(post("/samples").contentType(MediaType.APPLICATION_JSON).content("{"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.errorCode").value("INVALID_INPUT"));
+                .andExpect(jsonPath("$.code").value("INVALID_REQUEST"))
+                .andExpect(jsonPath("$.message").value(MALFORMED_MESSAGE));
     }
 
     @Test
-    @DisplayName("필수 헤더가 없으면 400 INVALID_INPUT으로 응답한다")
+    @DisplayName("필수 헤더가 없으면 400 INVALID_REQUEST와 필수 요청 정보 누락 문구로 응답한다")
     void missingHeader() throws Exception {
         mockMvc.perform(get("/samples/header"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.errorCode").value("INVALID_INPUT"));
+                .andExpect(jsonPath("$.code").value("INVALID_REQUEST"))
+                .andExpect(jsonPath("$.message").value(MISSING_MESSAGE));
     }
 
     @Test
-    @DisplayName("경로 변수 타입이 맞지 않으면 400 INVALID_INPUT으로 응답한다")
+    @DisplayName("경로 변수 타입이 맞지 않으면 400 INVALID_REQUEST와 요청 형식 오류 문구로 응답한다")
     void typeMismatch() throws Exception {
         mockMvc.perform(get("/samples/abc"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.errorCode").value("INVALID_INPUT"));
+                .andExpect(jsonPath("$.code").value("INVALID_REQUEST"))
+                .andExpect(jsonPath("$.message").value(MALFORMED_MESSAGE));
     }
 
     @Test
@@ -102,15 +119,16 @@ class GlobalExceptionHandlerTest {
     void noHandler() throws Exception {
         mockMvc.perform(get("/nope"))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.errorCode").value("RESOURCE_NOT_FOUND"));
+                .andExpect(jsonPath("$.code").value("RESOURCE_NOT_FOUND"));
     }
 
     @Test
-    @DisplayName("@Validated 파라미터 제약 위반(ConstraintViolationException)도 400 INVALID_INPUT으로 응답한다")
+    @DisplayName("@Validated 파라미터 제약 위반(ConstraintViolationException)도 400 INVALID_REQUEST로 응답한다")
     void constraintViolation() throws Exception {
         mockMvc.perform(get("/samples/constraint"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.errorCode").value("INVALID_INPUT"));
+                .andExpect(jsonPath("$.code").value("INVALID_REQUEST"))
+                .andExpect(jsonPath("$.message").value(MISSING_MESSAGE));
     }
 
     @Test
@@ -118,7 +136,7 @@ class GlobalExceptionHandlerTest {
     void methodNotAllowed() throws Exception {
         mockMvc.perform(post("/samples/business"))
                 .andExpect(status().isMethodNotAllowed())
-                .andExpect(jsonPath("$.errorCode").value("METHOD_NOT_ALLOWED"));
+                .andExpect(jsonPath("$.code").value("METHOD_NOT_ALLOWED"));
     }
 
     @Test
@@ -126,7 +144,7 @@ class GlobalExceptionHandlerTest {
     void unexpected() throws Exception {
         mockMvc.perform(get("/samples/unexpected"))
                 .andExpect(status().isInternalServerError())
-                .andExpect(jsonPath("$.errorCode").value("INTERNAL_SERVER_ERROR"))
+                .andExpect(jsonPath("$.code").value("INTERNAL_SERVER_ERROR"))
                 .andExpect(jsonPath("$.message").value("서버 오류가 발생했습니다."));
     }
 
@@ -135,7 +153,12 @@ class GlobalExceptionHandlerTest {
 
         @GetMapping("/samples/business")
         void business() {
-            throw new SampleException(ErrorCode.RESOURCE_NOT_FOUND, "샘플이 없습니다.");
+            throw new SampleException(ErrorCode.PRODUCT_NOT_FOUND, "샘플이 없습니다.");
+        }
+
+        @GetMapping("/samples/tenant")
+        void tenant() {
+            throw new SampleException(ErrorCode.INVALID_TENANT);
         }
 
         @PostMapping("/samples")
@@ -164,6 +187,10 @@ class GlobalExceptionHandlerTest {
     }
 
     static class SampleException extends BusinessException {
+        SampleException(ErrorCode errorCode) {
+            super(errorCode);
+        }
+
         SampleException(ErrorCode errorCode, String detail) {
             super(errorCode, detail);
         }

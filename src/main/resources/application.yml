@@ -5,8 +5,11 @@ spring:
     default: local
   jpa:
     open-in-view: false
-    # ddl-auto로 스키마를 만든 뒤 data.sql(seed)을 실행한다
-    defer-datasource-initialization: true
+    # 스키마는 schema.sql이 만든다. JPA는 엔티티 매핑이 스키마와 맞는지 검증만 한다 (프로파일에서 덮어쓰지 않는다)
+    hibernate:
+      ddl-auto: validate
+    # schema.sql → data.sql → JPA 검증 순서로 실행한다
+    defer-datasource-initialization: false
     properties:
       hibernate:
         default_batch_fetch_size: 100
@@ -17,10 +20,16 @@ spring:
         order_updates: true
   jackson:
     time-zone: Asia/Seoul
+    # 수량은 JSON 정수만 받는다. 소수(1.5) → 정수, 문자열("10") → 숫자 강제 변환을 끈다 (실패하면 400 INVALID_REQUEST)
+    deserialization:
+      accept-float-as-int: false
+    mapper:
+      allow-coercion-of-scalars: false
   sql:
     init:
-      # src/main/resources/data.sql이 있으면 기동마다 실행한다. 재기동에도 안전하도록 INSERT ... ON CONFLICT DO NOTHING으로 쓴다
+      # schema.sql(CREATE TABLE IF NOT EXISTS)과 data.sql(INSERT ... ON CONFLICT DO NOTHING)을 기동마다 실행한다
       mode: always
+      encoding: UTF-8
 
 server:
   shutdown: graceful
@@ -46,6 +55,4 @@ spring:
     password: app
     driver-class-name: org.postgresql.Driver
   jpa:
-    hibernate:
-      ddl-auto: update
     show-sql: false

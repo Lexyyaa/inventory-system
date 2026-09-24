@@ -419,3 +419,8 @@ A001 / Samsung / 10
 5. 상품 존재
 6. 상품 · 재고 상태
 ```
+
+경로 · 메서드 오류는 위 순서와 별개로 이렇게 판정한다.
+
+- 지원하지 않는 HTTP 메서드(405 `METHOD_NOT_ALLOWED`)는 Tenant 확인보다 먼저 판정한다
+- 존재하지 않는 경로(404 `RESOURCE_NOT_FOUND`)는 Tenant 확인 뒤에 판정한다. 헤더가 없으면 400 `INVALID_TENANT`다
