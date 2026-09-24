@@ -31,6 +31,10 @@ spring:
       mode: always
       encoding: UTF-8
 
+inventory:
+  # 입고 · 출고 요청 한 건의 수량 상한 (02 §3 "수량"). 1 미만이거나 이 값을 넘으면 400 INVALID_QUANTITY
+  max-quantity: 1000000000
+
 server:
   shutdown: graceful
 
