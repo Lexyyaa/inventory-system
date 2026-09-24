@@ -439,15 +439,15 @@ Inventory는 위의 원자 쿼리로만 변경한다.
 
 # 13. 재고 조회
 
-재고 조회는 Product와 Inventory를 하나의 SELECT에서 INNER JOIN으로 함께 조회한다.
+재고 조회는 요청 업체의 Product를 찾은 뒤, 그 Product의 Inventory를 식별자로 조회한다.
 
-```sql
-SELECT p.product_code, p.name, i.quantity, i.updated_at
-FROM product p
-JOIN inventory i ON i.product_id = p.id
-WHERE p.tenant_id = :tenantId
-  AND p.product_code = :productCode;
-```
+* Product: `tenant_id + product_code`로 조회한다. 없으면 상품 없음으로 응답한다
+* Inventory: `product_id`(PK)로 조회한다
+* 직접 작성한 쿼리 없이 Spring Data 조회 메서드로 처리한다
+
+상품명은 생성 뒤 바뀌지 않으므로, 두 번 나누어 읽어도 응답 값은 JOIN 한 번으로 읽은 값과 같다.
+
+Product가 있으면 Inventory도 있다. 입고가 두 행을 한 Transaction에서 만들기 때문이다. Inventory가 없으면 서버 결함으로 본다.
 
 조회에는 재고 변경을 위한 별도의 비관적 Lock을 사용하지 않는다.
 

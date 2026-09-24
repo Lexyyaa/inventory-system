@@ -59,7 +59,7 @@ com.deepfine.inventorysystem
   - 5개 이상이면 애그리거트 옆에 입력 VO(record)를 둔다
 - 도메인 메서드의 반환용 Result 객체는 만들지 않는다
   - 필요한 값은 애그리거트에서 꺼낸다
-  - 단 원자 SQL의 `RETURNING`(quantity · updated_at)과 조회 JOIN 결과는 `domain/{domain}`의 읽기 전용 record로 돌려준다
+  - 단 원자 SQL의 `RETURNING`(quantity · updated_at)은 `domain/{domain}`의 읽기 전용 record로 돌려준다
     - 예: `InventoryState(Long quantity, Instant updatedAt)`
 
 ### 메서드 길이
@@ -88,7 +88,7 @@ com.deepfine.inventorysystem
 - 재고 변경과 상품 생성은 `03`의 원자 SQL(native)로 한다
   - `RETURNING` 결과를 받아 응답에 쓴다
   - `@Modifying`은 영향 행 수만 돌려주므로 `RETURNING`이 필요한 쿼리에 쓰지 않는다
-  - `RETURNING` · JOIN 결과는 domain record로 바로 받는다. 별칭을 record 필드명과 맞춘다 (`updated_at AS updatedAt`)
+  - `RETURNING` 결과는 domain record로 바로 받는다. 별칭을 record 필드명과 맞춘다 (`updated_at AS updatedAt`)
   - native 쿼리의 `timestamptz`는 Hibernate 6.6에서 `Instant`로 온다. record의 시각 필드는 `Instant`로 둔다 (`OffsetDateTime`이면 "argument type mismatch")
 
 ## DTO
