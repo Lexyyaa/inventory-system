@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 class InventoryTest {
 
     private static final long MAX_QUANTITY = 1_000_000_000L;
+    private static final String OUTBOUND_QUANTITY_MESSAGE = "출고 수량이 허용 범위를 벗어났습니다.";
 
     @Test
     @DisplayName("[TC-2-14] 입고 수량이 1 이상 상한 이하일 때만 통과하고 벗어나면 INVALID_QUANTITY로 거부한다")
@@ -32,6 +33,32 @@ class InventoryTest {
         assertInvalidQuantity(negative);
         assertInvalidQuantity(zero);
         assertInvalidQuantity(overMax);
+    }
+
+    @Test
+    @DisplayName("[TC-4-10] 출고 수량이 1 이상 상한 이하일 때만 통과하고 벗어나면 출고 문구의 INVALID_QUANTITY로 거부한다")
+    void validatesOutboundQuantityRange() {
+        // given
+        long max = MAX_QUANTITY;
+
+        // when
+        Throwable negative = catchThrowable(() -> Inventory.validateOutboundQuantity(-1, max));
+        Throwable zero = catchThrowable(() -> Inventory.validateOutboundQuantity(0, max));
+        Throwable min = catchThrowable(() -> Inventory.validateOutboundQuantity(1, max));
+        Throwable atMax = catchThrowable(() -> Inventory.validateOutboundQuantity(max, max));
+        Throwable overMax = catchThrowable(() -> Inventory.validateOutboundQuantity(max + 1, max));
+
+        // then
+        assertThat(min).isNull();
+        assertThat(atMax).isNull();
+        assertInvalidOutboundQuantity(negative);
+        assertInvalidOutboundQuantity(zero);
+        assertInvalidOutboundQuantity(overMax);
+    }
+
+    private static void assertInvalidOutboundQuantity(Throwable thrown) {
+        assertInvalidQuantity(thrown);
+        assertThat(thrown).hasMessage(OUTBOUND_QUANTITY_MESSAGE);
     }
 
     private static void assertInvalidQuantity(Throwable thrown) {

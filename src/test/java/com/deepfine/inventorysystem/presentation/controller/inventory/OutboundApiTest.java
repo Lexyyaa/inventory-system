@@ -138,6 +138,56 @@ class OutboundApiTest {
         assertThat(db.inventoryQuantities("tenant-001", "A001")).containsExactly(10L);
     }
 
+    @Test
+    @DisplayName("[TC-4-05] 재고 10에서 10을 출고하면 200과 재고 0을 반환하고 상품은 계속 조회된다")
+    void allowsOutboundOfEntireStock() throws Exception {
+        // given
+        db.insertProduct("tenant-001", "A001", "Apple", 10);
+
+        // when
+        ResultActions result = outbound("tenant-001", """
+                {"productCode":"A001","quantity":10}""");
+
+        // then
+        result.andExpect(status().isOk())
+                .andExpect(jsonPath("$.productCode").value("A001"))
+                .andExpect(jsonPath("$.productName").value("Apple"))
+                .andExpect(jsonPath("$.quantity").value(0));
+        assertThat(updatedAtOf(result).getOffset()).isEqualTo(SEOUL_OFFSET);
+        currentStock("tenant-001", "A001")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.quantity").value(0));
+        assertThat(db.productNames("tenant-001", "A001")).containsExactly("Apple");
+        assertThat(db.inventoryQuantities("tenant-001", "A001")).containsExactly(0L);
+    }
+
+    @Test
+    @DisplayName("[TC-4-06] tenant-002가 tenant-001에만 있는 A001을 출고하면 PRODUCT_NOT_FOUND로 거부하고 tenant-001의 재고를 유지한다")
+    void rejectsProductOnlyInOtherTenant() throws Exception {
+        // given
+        db.insertProduct("tenant-001", "A001", "Apple", 10);
+        OffsetDateTime updatedAtBefore = db.inventoryUpdatedAt("tenant-001", "A001");
+        assertThat(db.productNames("tenant-002", "A001")).isEmpty();
+
+        // when
+        ResultActions result = outbound("tenant-002", """
+                {"productCode":"A001","quantity":5}""");
+
+        // then
+        expectError(result, HttpStatus.NOT_FOUND, "PRODUCT_NOT_FOUND", PRODUCT_NOT_FOUND_MESSAGE);
+        ResultActions tenant001 = currentStock("tenant-001", "A001");
+        tenant001
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.quantity").value(10))
+                .andExpect(jsonPath("$.productName").value("Apple"));
+        assertThat(updatedAtOf(tenant001)).isAtSameInstantAs(updatedAtBefore);
+        ResultActions tenant002 = currentStock("tenant-002", "A001");
+        expectError(tenant002, HttpStatus.NOT_FOUND, "PRODUCT_NOT_FOUND", PRODUCT_NOT_FOUND_MESSAGE);
+        assertThat(db.productNames("tenant-002", "A001")).isEmpty();
+        assertThat(db.productCount("tenant-002")).isZero();
+        assertThat(db.inventoryQuantities("tenant-001", "A001")).containsExactly(10L);
+    }
+
     private ResultActions outbound(String tenantCode, String body) throws Exception {
         return mockMvc.perform(post(OUTBOUND_URL)
                 .header(TENANT_HEADER, tenantCode)
